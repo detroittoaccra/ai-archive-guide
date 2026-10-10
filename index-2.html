@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Using AI for a Community Archive: Decision Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2EF; --surface:#FFFFFF; --ink:#17211E; --muted:#4E5D58; --line:#CBD5D0;
+  --accent:#1D5A52; --accent-ink:#FFFFFF; --accent-soft:#DCEBE7; --ochre:#9A6A12;
+  --go:#2E7A4C; --go-soft:#E0F0E6; --wait:#9A6400; --wait-soft:#FBF0D9; --stop:#A93A28; --stop-soft:#F8E3DE;
+  --focus:#9A6A12;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121A18; --surface:#1A2522; --ink:#E4ECE8; --muted:#A5B5AF; --line:#324440;
+    --accent:#73BDB0; --accent-ink:#0E1A17; --accent-soft:#1F3833; --ochre:#E0B25A;
+    --go:#6FCB93; --go-soft:#1C3325; --wait:#E8B24F; --wait-soft:#3A2F17; --stop:#F08A74; --stop-soft:#3D221C;
+    --focus:#E0B25A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121A18; --surface:#1A2522; --ink:#E4ECE8; --muted:#A5B5AF; --line:#324440;
+  --accent:#73BDB0; --accent-ink:#0E1A17; --accent-soft:#1F3833; --ochre:#E0B25A;
+  --go:#6FCB93; --go-soft:#1C3325; --wait:#E8B24F; --wait-soft:#3A2F17; --stop:#F08A74; --stop-soft:#3D221C;
+  --focus:#E0B25A;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:1.0625rem;line-height:1.6}
+.wrap{max-width:44rem;margin:0 auto;padding:1.5rem 1.25rem 4rem}
+h1,h2,h3{line-height:1.2;margin:0 0 .6em}
+h1{font-size:clamp(2rem,6vw,3rem);letter-spacing:-.01em;max-width:18ch}
+h2{font-size:clamp(1.5rem,4vw,2rem)}
+h3{font-size:1.2rem;margin-top:1.8em}
+p{margin:0 0 1em}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+.lead{font-size:1.2rem;color:var(--muted);max-width:36rem}
+.muted{color:var(--muted)}
+.small{font-size:.92rem}
+
+/* Trail (step path) */
+.trail-box{overflow-x:auto;margin:0 -1.25rem 1.75rem;padding:0 1.25rem}
+.trail{display:flex;list-style:none;margin:0;padding:.25rem 0;min-width:max-content}
+.trail li{position:relative;flex:1 0 auto}
+.trail li+li::before{content:"";position:absolute;top:1.05rem;left:-50%;right:50%;height:3px;background:var(--line);z-index:0}
+.trail li.done+li::before,.trail li.done.cur::before{background:var(--accent)}
+.trail button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:.3rem;
+  background:none;border:0;color:var(--muted);font:inherit;font-size:.85rem;padding:0 .7rem;cursor:pointer;min-width:5.2rem}
+.trail .node{width:2.1rem;height:2.1rem;border-radius:50%;display:grid;place-items:center;
+  background:var(--surface);border:3px solid var(--line);font-weight:700;font-size:.9rem;color:var(--muted)}
+.trail li.done .node{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.trail li.cur .node{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.trail li.cur button{color:var(--ink);font-weight:700}
+
+/* Intro */
+.hero{padding:1rem 0 1.5rem}
+.lightkey{margin:1.5rem 0 0;padding:1.25rem;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.lightkey h3{font-size:1.2rem;margin:0 0 .4rem}
+.lightkey>p{margin:0 0 1rem;color:var(--muted)}
+.lightkey ul{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
+.lightkey li{display:grid;grid-template-columns:1.6rem 1fr;gap:.75rem;align-items:start}
+.lightkey .dot{width:1.6rem;height:1.6rem;border-radius:50%;margin-top:.1rem;border:2px solid var(--ink)}
+.lightkey .dot.green{background:#3FB36A}.lightkey .dot.yellow{background:#F2C230}.lightkey .dot.red{background:#E0583F}
+.lightkey li p{margin:0}
+.facts{display:grid;gap:0;margin:2rem 0;border-top:2px solid var(--ink)}
+.fact{display:grid;grid-template-columns:minmax(8rem,12rem) 1fr;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--line)}
+.fact h3{margin:0;font-size:1.05rem}
+.fact p{margin:0}
+@media (max-width:560px){.fact{grid-template-columns:1fr;gap:.25rem}}
+.habits{margin:.5rem 0 0;padding-left:1.2rem}
+.habits li{margin:.2rem 0}
+.how{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1.25rem 1.25rem .5rem;margin:2rem 0}
+.how ol{padding-left:1.3rem;margin:.5rem 0 1rem}
+.btns{display:flex;flex-wrap:wrap;gap:.75rem;margin:1.5rem 0}
+.btn{appearance:none;font:inherit;font-weight:700;font-size:1rem;padding:.8rem 1.35rem;border-radius:8px;cursor:pointer;
+  border:2px solid var(--accent);background:var(--accent);color:var(--accent-ink);min-height:48px}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.plain{border-color:transparent;background:transparent;color:var(--muted);text-decoration:underline;padding-left:.4rem;padding-right:.4rem}
+.btns .saved-note,.btns .confirm-q{flex-basis:100%;margin:0}
+.btns .confirm-q{font-weight:700}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* Questions */
+.count{color:var(--muted);font-size:.95rem;margin-bottom:.3rem}
+.q{margin:2rem 0 0;padding-top:1.5rem;border-top:1px solid var(--line)}
+.q[hidden]{display:none}
+.q.follow{margin-top:1rem;padding:1rem 1rem .25rem;border:0;border-left:4px solid var(--accent);background:var(--surface);border-radius:0 8px 8px 0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend,.qlabel{display:block;font-weight:700;font-size:1.15rem;margin-bottom:.6rem;padding:0;line-height:1.35}
+.qhint{color:var(--muted);font-size:.95rem;margin:-.3rem 0 .6rem}
+details.why{margin:0 0 .8rem;font-size:.95rem}
+details.why summary{cursor:pointer;color:var(--accent);font-weight:700;width:max-content;max-width:100%}
+details.why p{margin:.5rem 0 0;padding:.75rem 1rem;background:var(--accent-soft);border-radius:8px}
+.learn{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:1rem}
+.learn h3{margin:0 0 .5rem;font-size:1.3rem}
+.learn p{margin:0 0 .6rem}
+.learn .ex{color:var(--muted);font-style:italic}
+.learn .odds{display:flex;flex-wrap:wrap;gap:.4rem;margin:.2rem 0 .8rem;padding:0;list-style:none}
+.learn .odds li{font-size:.88rem;padding:.25rem .6rem;border-radius:6px;background:var(--bg);border:1px solid var(--line)}
+.learn .odds b{font-weight:700}
+.learn h4{margin:.6rem 0 .2rem;font-size:1rem}
+.learn ul.reduce{margin:0;padding-left:1.2rem}
+.learn ul.reduce li{margin:.2rem 0}
+.catlist{margin:0 0 1rem;padding:.75rem 1rem .75rem 2.4rem;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.catlist li{margin:.25rem 0}
+.subhead{font-size:1.45rem;margin:.5rem 0 .4rem}
+.q.follow .subhead{font-size:1.2rem}
+#needAns{margin-top:1.5rem}
+.opts{display:grid;gap:.5rem}
+.opt{display:flex;gap:.8rem;align-items:flex-start;padding:.8rem 1rem;background:var(--surface);
+  border:2px solid var(--line);border-radius:10px;cursor:pointer}
+.opt:hover{border-color:var(--muted)}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.opt input{width:1.3rem;height:1.3rem;margin:.15rem 0 0;flex:none;accent-color:var(--accent)}
+.opt .ol{display:flex;flex-direction:column}
+.opt .note{color:var(--muted);font-size:.9rem;margin-top:.15rem}
+input[type=text]{width:100%;font:inherit;padding:.75rem .9rem;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-height:48px}
+input[type=text]:focus{border-color:var(--accent)}
+.flags:empty{display:none}
+.flags{margin-top:.75rem;display:grid;gap:.5rem}
+.flag{padding:.7rem 1rem;border-radius:8px;border-left:5px solid;font-size:.97rem}
+.flag b{display:block;margin-bottom:.1rem}
+.flag.stop{background:var(--stop-soft);border-color:var(--stop)}
+.flag.caution{background:var(--wait-soft);border-color:var(--wait)}
+.flag.ok{background:var(--go-soft);border-color:var(--go)}
+.navrow{display:flex;justify-content:space-between;gap:.75rem;margin-top:2.5rem;padding-top:1.25rem;border-top:2px solid var(--ink)}
+
+/* Results */
+.verdict{margin:1rem 0 2rem;padding:1.5rem;border-radius:12px;background:var(--surface);border:2px solid var(--line)}
+.stages{display:flex;gap:.4rem;list-style:none;margin:0 0 1rem;padding:0}
+.stages li{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.25;padding:.4rem .5rem;border:2px solid var(--line);border-radius:999px;font-size:.9rem;font-weight:700;color:var(--muted)}
+.stages li.done{border-color:var(--accent);color:var(--accent)}
+.stages li.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.verdict h2{margin:0 0 .3rem}
+.verdict p{margin:0}
+.issue-list{list-style:none;padding:0;margin:.5rem 0 0;display:grid;gap:.5rem}
+.sheet-box{margin-top:1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);max-height:32rem;overflow:auto}
+.sheet{padding:1.5rem;font-size:.95rem}
+.sheet h1{font-size:1.5rem;max-width:none}
+.sheet h2{font-size:1.15rem;margin-top:1.6em;padding-bottom:.25em;border-bottom:1px solid var(--line)}
+.sheet h4{margin:.9em 0 .2em;font-size:1rem}
+.sheet ul,.sheet ol{padding-left:1.3rem}
+.sheet li{margin:.25rem 0}
+.sheet dl{display:grid;grid-template-columns:minmax(9rem,max-content) 1fr;gap:.2rem 1rem;margin:0}
+.sheet dt{font-weight:700}
+.sheet dd{margin:0}
+.status{min-height:1.5em;font-size:.95rem;color:var(--muted)}
+.foot{margin-top:3rem;font-size:.9rem;color:var(--muted);border-top:1px solid var(--line);padding-top:1rem}
+@media (prefers-reduced-motion:no-preference){
+  .stages li.on{animation:glow .6s ease-out 1}
+  @keyframes glow{from{opacity:.4;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+}
+@media print{
+  body{background:#fff;color:#000}
+  .trail-box,.btns,.navrow,.status,.foot{display:none}
+  .sheet-box{max-height:none;border:0}
+}
+</style>
+</head>
+<body>
+<main class="wrap" id="app" aria-live="off"></main>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Content: steps and questions ---------- */
+function taskAny(a,l){ var t=a.tasks||[], real=t.filter(function(x){return x!=="advice";});
+  if(!real.length||t.indexOf("advice")>-1) return true; return l.some(function(x){return t.indexOf(x)>-1;}); }
+function noAI(){ return A.discussed==="against"; }
+function lightKeyHTML(){
+  return '<div class="lightkey"><h3>Green, yellow and red light</h3><p>'+esc(noAI()?"Sort material by who may see it. The rest of the guide uses these three levels.":LIGHTS_NOTE)+'</p><ul>'+
+    LIGHTS.map(function(L){return '<li><span class="dot '+L.k+'" aria-hidden="true"></span><p><b>'+esc(L.name)+'.</b> '+esc(L.what)+(noAI()?'':' '+esc(L.rule))+'</p></li>';}).join("")+'</ul></div>';
+}
+function T(x,alt){ return noAI()&&alt?alt:x; }
+function notAgainst(a){ return a.discussed!=="against"; }
+function fullPath(a){ return a.discussed!=="against"&&a.discussed!=="not"; }
+function topic(id,title,L,na,show){
+  var o=[{v:"ok",l:"We understand this and are accepting the risk"},
+         {v:"discuss",l:"We need to discuss this more",flag:["caution","Discuss '"+title+"' as a group before starting."]}];
+  if(na) o.push({v:"na",l:na});
+  return {id:id,type:"single",topicTitle:title,learn:L,show:show,label:"Where does your group stand on this?",opts:o};
+}
+var LIGHTS = [
+  {k:"green", name:"Green light", what:"Already public.", rule:"May be used with AI tools, including free accounts with training switched off, as long as a person checks every result."},
+  {k:"yellow", name:"Yellow light", what:"For the community only.", rule:"May go into AI only if the community agrees, and only with tools on your own computers or services with a written promise not to train on it. Never with free or personal accounts."},
+  {k:"red", name:"Red light", what:"Restricted, sacred or sensitive: including personal information about living people, locations of sacred sites or graves, land and legal matters, and material about children.", rule:"Never goes into any AI tool. Handled by people only, under community protocols."}];
+var LIGHTS_NOTE = "Sort material into green, yellow and red light by who may see it. The colour decides what AI may touch.";
+var CHECKED = "September 2026";
+/* ---------- Risks and limits, placed under the task they belong to ---------- */
+var TOPICS={};
+[
+topic("r_halluc","Made-up content (hallucinations)",{means:"AI states false things confidently, with no warning.",ex:"A summary says an elder was born in a village she never lived in; a translation invents the meaning of a ceremony.",odds:["Almost certain on any large job","Rare to reach the archive","Medium to high: false facts can last for generations"],reduce:["A knowledgeable community member checks every output before it is saved.","Label AI-made text clearly so mistakes are not taken as fact."]}),
+topic("r_leak","Leaks and exposure",{means:"Private or sacred material ends up where it should not. This usually happens through human error, not hacking.",ex:"Someone pastes a restricted recording into a free online AI tool, or a search tool shows restricted items to the public.",odds:["Possible","Low","High for sacred or personal material"],reduce:["Agree clear rules on what may be uploaded, and by whom.","Use offline or local tools for anything sensitive.","A simple rule: if you would not post it on a public noticeboard, do not put it into a public AI tool."]}),
+topic("r_train","Your material used to train AI",{means:"The company keeps your material and uses it to build its products.",ex:"Your language or stories end up inside a commercial AI product.",odds:["Likely on many free tools","Low","High for cultural and language material"],reduce:["On most free and personal accounts, chats can be used for training unless you switch it off. Before uploading anything, turn off settings such as 'Improve the model for everyone' (ChatGPT), 'Help improve Claude' (Claude) or 'Keep Activity' (Gemini).","Switching it off protects future chats only, not past ones, and every person's account must be changed separately.","Do not press thumbs up, thumbs down or other feedback buttons on chats that contain archive material. On several services, a chat you give feedback on can be kept and used for training even when training is switched off.","Setting names last checked: "+CHECKED+". Companies rename and move these settings, so confirm them before you rely on this list.","Business, education, nonprofit and developer (API) accounts often do not train on your data by default. Check the terms, and recheck regularly, because companies change them."]}),
+topic("r_bias","Bias and misrepresentation",{means:"AI repeats outside or colonial views of your community.",ex:"Photos labelled with offensive historic terms, or your people described as 'extinct'.",odds:["Likely","Low","Medium: hurtful and misleading"],reduce:["People review every description.","Use your community's own words and labels."]},null,function(a){return taskAny(a,["describe","summarise","translate","search"]);}),
+topic("r_meaning","Loss of meaning and protocols",{means:"Stories are reduced to keywords, and cultural rules are ignored.",ex:"Seasonal or gender-restricted knowledge becomes searchable by anyone.",odds:["Likely","Low","Medium to high for restricted knowledge"],reduce:["Knowledge holders decide what AI may touch.","Record protocols alongside each item."]},null,function(a){return taskAny(a,["describe","summarise","translate","search"])||a.protocols==="written"||a.protocols==="unwritten";}),
+topic("r_control","Ownership, dependency and cost",{means:"You cannot get your material back, or the archive only works while a company's tool exists and you can pay for it.",ex:"Prices rise, a free version ends, or the company closes.",odds:["Likely within 3 to 5 years","Still likely, but harmless if prepared","Low if you keep your own copies"],reduce:["Keep your own full copies of originals.","Use open file formats, and make sure the archive works without AI.","Get written agreements on ownership, deletion and where material is stored."]}),
+topic("r_harm","Surveillance and harm",{means:"Information is used against community members.",ex:"Locations of sacred sites, land claims or activists become easy to find.",odds:["Unlikely","Very low","Very high"],reduce:["Keep red-light material out of AI entirely.","Think about who might want this information, and why."]},null,function(a){return taskAny(a,["search","website"])||(a.sensitive||[]).some(function(x){return ["sacred","personal","locations","legal","children"].indexOf(x)>-1;});}),
+topic("e_context","Limited memory (context drop)",{means:"AI can only hold a certain amount of material in mind at once. With long material it forgets or skims parts, often the middle.",ex:"A summary of a three-hour oral history leaves out the most important story.",reduce:["Break long recordings and documents into shorter pieces.","Check summaries against the full item."]},null,function(a){return taskAny(a,["transcribe","summarise","search","translate","ocr"]);}),
+topic("e_lang","Language gaps and errors that add up",{means:"AI learns mostly from English and a few big languages. When text is generated in stages (transcribe, then translate, then summarise), each stage adds its own mistakes.",ex:"By the end of the chain, the meaning of a story may be badly wrong, with invented details that look like fact.",reduce:["Test each language on a sample.","Check each stage before starting the next.","Budget for human correction."]},null,function(a){return taskAny(a,["transcribe","translate","ocr","summarise"]);}),
+topic("e_collapse","Model collapse",{means:"When AI learns from content that other AI produced, its quality slowly gets worse. Rare words, dialects and unusual stories fade first.",ex:"If unchecked AI text fills the archive, future tools trained on it inherit and magnify the errors.",reduce:["Keep human-made and AI-made content clearly separate and labelled.","Never treat unchecked AI text as the original record."]},null,function(a){return taskAny(a,["transcribe","ocr","translate","describe","summarise","search"]);}),
+topic("e_change","Inconsistency, changing tools and over-trust",{means:"The same question can get different answers; companies update tools without warning; AI rarely says 'I don't know'. People also tend to trust computers too much, especially when busy.",ex:"A process that worked last year gives different results now, and reviewers stop checking carefully after a few good results.",reduce:["Test on 10 to 20 items you know well: advertised accuracy may not apply to your material.","Retest after updates and at each community review.","Rotate reviewers or take breaks so checking stays careful."]}),
+topic("e_long","Long projects that go beyond a single chat",{means:"Chat tools usually do not remember earlier conversations, and long chats lose track of details from the start.",ex:"Naming rules or access decisions agreed in March are ignored in May.",reduce:["Keep your own written record of key decisions and instructions, and share it at the start of each session.","Do not rely on chat history as your only record of the work.","For technical work, agentic tools (such as Claude Code or Codex) can keep track across sessions, but they change files directly. Use them only on a copy, with backups, never on folders with restricted material, and with someone who can review their changes."]},"Not relevant: our use will be short, one-off tasks"),
+topic("e_web","Using AI to build or fix the website",{means:"AI can expose passwords or personal data pasted into it, and its quick fixes can weaken security or make restricted material public.",ex:"A 'permission denied' error is 'fixed' by making every folder open to everyone.",reduce:["Remove passwords, keys and personal details before pasting anything.","Test changes on a copy of the site, with a recent backup.","Have a person review any change affecting logins or who can see what.","After changes, check the site as a visitor, a community member and an admin."]},null,function(a){return taskAny(a,["website"]);}),
+topic("e_env","Environmental cost",{means:"AI runs in data centres that use electricity and water. For a community archive the impact is usually modest, and your choices make a real difference.",ex:"Costs are highest with very large tools, image or video generation, and re-running the same task. Some data centres are in water-scarce regions, including in the Global South.",reduce:["Use smaller tools, and run them locally where possible.","Do each task once, well, and work in batches.","Skip AI images and video unless they serve a clear purpose.","Ask providers about their energy and water use."]})
+].forEach(function(t){ TOPICS[t.id]=t; });
+function groupOn(a,g){ return fullPath(a)&&(has(a.tasks,"advice")||g.tasks.some(function(t){return has(a.tasks,t);})); }
+var TASK_GROUPS=[
+  {id:"t_lang", title:"Transcription, scanned text and translation", short:"Language", tasks:["transcribe","ocr","translate"],
+   intro:"These risks come with transcription, reading scanned documents and translation.",
+   extra:[  {id:"langType", type:"single", show:function(a){return has(a.tasks,"transcribe")||has(a.tasks,"translate")||has(a.tasks,"ocr");},
+    label:"What languages are represented in your collection?",
+    hint:function(a){ return a.languages&&a.languages.trim()?"You listed: "+a.languages.trim()+". Choose the description that fits best.":"Choose the description that fits best."; },
+    why:"AI tools learn mostly from English and a few other widely spoken languages. The fewer speakers a language has online, the more errors to expect, and some languages are not supported at all.",
+    opts:[
+    {v:"major", l:"Mostly major world languages (English, Spanish, French and similar)"},
+    {v:"regional", l:"Regional or national languages with fewer speakers", flag:["caution","Expect more errors. Test on a sample before committing."]},
+    {v:"minority", l:"Indigenous or minority languages", flag:["caution","Expect high error rates, or no support at all. Test on a sample and plan for heavy human correction. Decide who will own any language tools that result."]},
+    {v:"mixed", l:"A mix", flag:["caution","Test each language separately; accuracy will vary a lot."]}]}], topics:["e_lang","e_context"]},
+  {id:"t_desc", title:"Descriptions and summaries", short:"Describing", tasks:["describe","summarise"],
+   intro:"These risks come with descriptions, tags and summaries.",
+   topics:["r_bias","r_meaning","e_context","e_lang","e_collapse"]},
+  {id:"t_search", title:"Search tool or chatbot", short:"Search", tasks:["search"],
+   intro:"This is the highest-risk task, because it can show material to people who should not see it.",
+   extra:[  {id:"searchScope", type:"single", show:function(a){return has(a.tasks,"search");},
+    label:"What should a search tool or chatbot be allowed to draw on?", opts:[
+    {v:"public", l:"Only green-light (already public) material"},
+    {v:"community", l:"Green- and yellow-light material, behind a login with access checks", flag:["caution","Access levels must be enforced every time the tool looks something up, not just on the files."]},
+    {v:"all", l:"Everything in the archive", flag:["stop","A chatbot that can read everything can reveal restricted items in its answers, even when the files themselves are locked. Limit it to green-light material, or yellow-light material behind access checks."]}]}], topics:["r_harm","r_meaning","r_bias","e_context","e_collapse"]},
+  {id:"t_web", title:"Website work", short:"Website", tasks:["website"],
+   intro:"These risks come with using AI on the archive website.",
+   topics:["e_web","r_harm"]}
+];
+var SHARED_TOPICS=["r_halluc","r_leak","r_train","r_control","r_harm","e_collapse","e_change","e_long","e_env","r_bias","r_meaning","e_context","e_lang"];
+var AGENT_Q={id:"agentUse", type:"single", show:fullPath,
+  label:"Will anyone use agentic tools (such as Claude Code or Codex) that change files directly?", opts:[
+  {v:"no", l:"No"},
+  {v:"sup", l:"Yes, supervised by someone with coding or web experience who can review every change"},
+  {v:"nosup", l:"Yes, but no one with that experience is available", flag:["caution","Agentic tools change files directly. Use them only with someone who can review their changes, on a copy, with backups, and never on folders containing red-light material."]}]};
+var ENV_Q={id:"environment", type:"single", show:fullPath, label:"How important is keeping environmental impact low?", opts:[
+    {v:"very", l:"Very important"},{v:"somewhat", l:"Somewhat important"},{v:"not", l:"Not a main concern"}]};
+function sharedInTasks(){
+  return [{id:"n_shared", type:"note", show:fullPath, title:"Risks for every task", text:"These apply whatever AI is used for. Each one says what it is, how likely it is, and how to reduce it. Most are very preventable: they come mainly from how AI is used, not from AI itself. Read each one together, then say where your group stands."}]
+    .concat(SHARED_TOPICS.reduce(function(qs,t){ qs.push(placeTopic(t,"shared")); if(t==="e_long") qs.push(AGENT_Q); if(t==="e_env") qs.push(ENV_Q); return qs; },[]))
+    .concat([{id:"n_check", type:"note", show:fullPath, title:"Checking the work", text:"Every AI result needs a person to check it before it becomes part of the archive."}]);
+}
+function sharedOn(a){ return a.discussed==="not"; } /* standalone risks step: only before the community has discussed AI */
+function homeOf(id,a){
+  for(var k=0;k<TASK_GROUPS.length;k++){ var g=TASK_GROUPS[k]; if(g.topics.indexOf(id)>-1&&groupOn(a,g)) return g.id; }
+  return fullPath(a)?"shared":(sharedOn(a)?"t_all":null);
+}
+function placeTopic(id,where){
+  var base=TOPICS[id], c={}; for(var k in base) c[k]=base[k];
+  c.dk=id+"__"+where; /* the same risk can sit in several places on one page; each copy needs its own form name */
+  c.show=function(a){ if(a.discussed==="not"&&id.indexOf("e_")===0) return false; /* the pre-discussion path keeps to the main risks */
+    return (!base.show||base.show(a))&&homeOf(id,a)===where; };
+  return c;
+}
+function groupBlocks(){
+  var out=[];
+  TASK_GROUPS.forEach(function(g){
+    out.push({id:"n_"+g.id, type:"note", follow:true, show:function(a){return groupOn(a,g);}, title:"Because you chose: "+g.title.charAt(0).toLowerCase()+g.title.slice(1), text:g.intro+" Say whether your group understands each one or needs to discuss it more."});
+    (g.extra||[]).forEach(function(q){ q.follow=true; out.push(q); });
+    g.topics.forEach(function(t){ var c=placeTopic(t,g.id); c.follow=true; out.push(c); });
+  });
+  return out;
+}
+function taskSteps(){
+  var out=[];
+  out.push({id:"t_all", title:"Understand the risks", short:"Risks", show:sharedOn,
+    intro:"These apply whatever AI is used for. Each one says what it is, how likely it is, and how to reduce it. Most are very preventable: they come mainly from how AI is used, not from AI itself. Read each one together, then say where your group stands.",
+    qs:SHARED_TOPICS.map(function(t){ return placeTopic(t,"t_all"); })});
+  return out;
+}
+ /* when the account-setting names below were last confirmed */
+var STEPS = [
+{ id:"about", title:"About you and the project", short:"You",
+  intro:"A few details to label your project brief. Leave blank anything you prefer not to share.",
+  qs:[
+  {id:"role", type:"single", label:"Which best describes you?", opts:[
+    {v:"community", l:"A community member or community organisation"},
+    {v:"institution", l:"A library, archive or museum working with a community"},
+    {v:"researcher", l:"A researcher working with a community (for example, in the humanities)"},
+    {v:"other", l:"Something else"}]},
+  {id:"agreement", type:"single", follow:true, show:function(a){return a.role==="researcher"||a.role==="institution";},
+    label:"Is there a written agreement with the community about who owns and controls the material?",
+    why:"Many Indigenous communities follow data sovereignty principles such as CARE (Collective benefit, Authority to control, Responsibility, Ethics) or, in Canada, OCAP\u00AE (Ownership, Control, Access, Possession). An agreement should say who owns the material, who decides how it is used, and what happens to copies when the project ends.",
+    opts:[
+    {v:"yes", l:"Yes, signed or formally agreed", flag:["ok","Good. The brief will note that an agreement is in place."]},
+    {v:"drafting", l:"It is being drafted", flag:["caution","Finish the agreement before any material is processed with AI.","Finish the agreement before work on the material begins."]},
+    {v:"no", l:"No", flag:["stop","An agreement on ownership and control comes first. No material should be processed until the community has agreed in writing.","An agreement on ownership and control comes first. No work on the material should start until the community has agreed in writing."]}]},
+  {id:"project", type:"text", label:"Project name", ph:"For example: River Valley Oral History Archive"},
+  {id:"org", type:"text", label:"Community or organisation (optional)"},
+  {id:"contact", type:"text", label:"Contact person for the developer (optional)"}
+  ]},
+{ id:"agree", title:"Community agreement", short:"Agreement",
+  intro:"The community should decide about AI together, before any material is uploaded. You are allowed to say no, not yet, or only for this part.",
+  qs:[
+  {id:"discussed", type:"single", label:"Has the community discussed using AI and agreed to try it?", opts:[
+    {v:"agreed", l:"Yes, we have agreed to try it", flag:["ok","Good. Record who agreed and when."]},
+    {v:"underway", l:"The discussion is under way", flag:["caution","Keep planning, but wait for agreement before any material goes into an AI tool."]},
+    {v:"not", l:"Not yet", flag:["stop","Start with a community conversation. The guide will now take a shorter path and end with a discussion pack to help you run it."]},
+    {v:"against", l:"The community has decided against it", flag:["stop","That is a legitimate decision. The guide will skip the AI-specific steps and produce a brief for archive work that does not use AI."]}]},
+  {id:"authority", type:"text", label:"Who has authority to approve decisions about the archive? (optional)", ph:"For example: council, elders, board, family representatives"},
+  {id:"partners", type:"single", show:function(a){return a.role!=="researcher"&&a.role!=="institution";},
+    label:"Are outside researchers or institutions involved in the project?", opts:[
+    {v:"yes", l:"Yes", flag:["ok","The guide will add a step on partnership terms."]},
+    {v:"no", l:"No"},
+    {v:"maybe", l:"Possibly in future"}]},
+  {id:"consent", type:"single", show:notAgainst, label:"Have the people who contributed material, or their families, agreed to AI being used on it?",
+    why:"People who shared recordings or photos years ago agreed to an archive, not to AI. Consent may need to be asked again, in their own language. Some consent is collective: families, clans or councils may need to agree, not just one person.",
+    opts:[
+    {v:"all", l:"Yes, for all of it"},
+    {v:"some", l:"For some of it", flag:["caution","Only material with consent should be considered for AI. The rest is handled by people only."]},
+    {v:"notasked", l:"We have not asked yet", flag:["caution","Plan how to ask, in local languages, before any processing."]},
+    {v:"no", l:"No", flag:["stop","Without their agreement, contributors' material stays out of AI and is handled by people only."]}]},
+  {id:"protocols", type:"single", label:"Are there cultural protocols about who may see or hear certain material?",
+    why:"Some knowledge is restricted by gender, age, season, family or ceremony. AI tools do not understand this unless it is built into the system.",
+    whyNoAI:"Some knowledge is restricted by gender, age, season, family or ceremony. The archive system, and the people who run it, need to follow these rules.",
+    opts:[
+    {v:"written", l:"Yes, and they are written down"},
+    {v:"unwritten", l:"Yes, but they are not written down", flag:["caution","Protocols need to be recorded in a form the system can follow before any automated processing.","Protocols need to be recorded so the archive system, and the people who run it, can follow them."]},
+    {v:"no", l:"No"},
+    {v:"unsure", l:"Not sure"}]}
+  ]},
+{ id:"prepare", title:"Preparing for a community conversation", short:"Prepare", show:function(a){return a.discussed==="not";},
+  intro:"Your community has not discussed AI yet, so the next step is a conversation, not technology. These questions help you plan it. The guide will skip the technical steps and end with a discussion pack.",
+  qs:[
+  {id:"c_who", type:"multi", label:"Who should be part of the conversation?", hint:"Choose all that apply.", opts:[
+    {v:"elders", l:"Elders and knowledge holders"},
+    {v:"council", l:"Council, board or other decision-makers"},
+    {v:"families", l:"Families of people whose stories or images are in the archive"},
+    {v:"youth", l:"Young people"},
+    {v:"gender", l:"Holders of gender-specific knowledge"},
+    {v:"lesstech", l:"People less comfortable with technology"},
+    {v:"staff", l:"Archive staff and volunteers"},
+    {v:"partners", l:"Outside partners (researchers, institutions)"}]},
+  {id:"c_lead", type:"text", label:"Who will host or lead the conversation? (optional)"},
+  {id:"c_lang", type:"text", label:"Which languages should the conversation happen in?"},
+  {id:"c_when", type:"single", label:"Has a time and place been set?", opts:[{v:"yes", l:"Yes"},{v:"no", l:"Not yet"}]},
+  {id:"c_examples", type:"single", label:"Would you like to show real examples of AI output, including its mistakes?",
+    why:"Seeing actual results, good and bad, helps people judge AI honestly rather than from hopes or fears.",
+    opts:[{v:"yes", l:"Yes, we will prepare some"},{v:"no", l:"No"},{v:"unsure", l:"Not sure how"}]},
+  {id:"c_pay", type:"single", label:"Will people be paid or thanked for their time and expertise?", opts:[{v:"yes", l:"Yes"},{v:"no", l:"No"},{v:"undecided", l:"Not decided"}]}
+  ]},
+{ id:"partner", title:"Partnership terms", short:"Partnership",
+  show:function(a){return a.discussed!=="not"&&(a.role==="researcher"||a.role==="institution"||a.partners==="yes");},
+  intro:"When researchers or institutions are involved, agree up front who owns what, who benefits, and what happens when the project ends. These points are central to data sovereignty principles such as CARE and OCAP\u00AE.",
+  qs:[
+  {id:"p_outputs", type:"single", label:"Who will own what the project produces, such as transcripts, translations, datasets, publications and any AI tools trained on the material?", labelNoAI:"Who will own what the project produces, such as transcripts, translations, datasets and publications?", opts:[
+    {v:"community", l:"The community owns and controls all of it"},
+    {v:"shared", l:"Shared, under a written agreement the community has approved"},
+    {v:"institution", l:"The researcher or institution", flag:["caution","Community ownership or control of outputs is a core data sovereignty principle. Revisit this before any processing."]},
+    {v:"notyet", l:"Not yet agreed", flag:["caution","Agree ownership of outputs, including any AI tools or datasets, before starting.","Agree ownership of outputs, including datasets, before starting."]}]},
+  {id:"p_review", type:"single", label:"Will the community review publications, presentations and datasets before they are shared?", opts:[
+    {v:"yes", l:"Yes"},
+    {v:"notyet", l:"Not yet agreed", flag:["caution","Agree a community review step before anything is published or shared."]}]},
+  {id:"p_benefit", type:"multi", label:"How will the community benefit?", hint:"Choose all that apply.", opts:[
+    {v:"pay", l:"Payment for time and expertise"},
+    {v:"skills", l:"Training and skills"},
+    {v:"access", l:"Copies of, and access to, everything produced"},
+    {v:"funding", l:"A share of funding"},
+    {v:"credit", l:"Credit or co-authorship"},
+    {v:"notyet", l:"Not yet discussed", flag:["caution","Discuss how the community will benefit, on its own terms."]}]},
+  {id:"p_ethics", type:"single", show:function(a){return a.role==="researcher"||a.role==="institution";},
+    label:"Has the project had ethics approval?",
+    why:"Institutional ethics review (such as a research ethics board or institutional review board) protects research participants, but it does not replace a community's own approval process.",
+    opts:[
+    {v:"both", l:"Yes, institutional and community approval"},
+    {v:"inst", l:"Institutional approval only", flag:["caution","Seek the community's own approval too; institutional review does not replace it."]},
+    {v:"comm", l:"Community approval only", flag:["caution","Check whether your institution also requires ethics review for this project. The community's approval comes first, but institutional review may still be required."]},
+    {v:"notyet", l:"Not yet", flag:["caution","Obtain institutional and community approval before starting."]}]},
+  {id:"p_end", type:"single", label:"What happens to copies and data when the project ends?", opts:[
+    {v:"decide", l:"Returned or deleted as the community decides"},
+    {v:"kept", l:"Kept by the institution under a written agreement"},
+    {v:"notyet", l:"Not yet agreed", flag:["caution","Agree what happens to all copies, including any held by AI providers, when the project ends.","Agree what happens to all copies, including any held by partners or service providers, when the project ends."]}]}
+  ]},
+{ id:"material", title:"Your material", short:"Material",
+  intro:"What you have decides what AI can safely touch.",
+  introNoAI:"What you have decides how the archive needs to protect and share it.",
+  qs:[
+  {id:"types", type:"multi", label:"What kinds of material are in the archive?", hint:"Choose all that apply.", opts:[
+    {v:"av", l:"Audio or video recordings"},
+    {v:"photos", l:"Photographs"},
+    {v:"hand", l:"Handwritten documents"},
+    {v:"print", l:"Printed documents, newsletters or books"},
+    {v:"land", l:"Maps, land or legal records"},
+    {v:"lang", l:"Language materials (word lists, lessons, dictionaries)"},
+    {v:"objects", l:"Objects or artworks"},
+    {v:"digital", l:"Born-digital material (emails, social media, websites)"}]},
+  {id:"languages", type:"text", label:"Which languages appear in the material?", ph:"For example: English, Kriol, Spanish, Quechua"},
+  {id:"volume", type:"single", label:"Roughly how much material is there?", opts:[
+    {v:"small", l:"Small: a few hundred items, or under 50 hours of recordings"},
+    {v:"medium", l:"Medium: thousands of items, or hundreds of hours"},
+    {v:"large", l:"Large: tens of thousands of items or more"},
+    {v:"unsure", l:"Not sure"}]},
+  {id:"sensitive", type:"multi", label:"Does any of the material include the following?", hint:"Choose all that apply.",
+    why:"These are red-light material: they are kept away from AI entirely and handled by people only, under community protocols.",
+    whyNoAI:"These are red-light material: handled by people only, under community protocols, with restricted access and kept out of public search.",
+    opts:[
+    {v:"sacred", l:"Sacred, ceremonial or restricted knowledge", flag:["caution","Sacred and restricted material should be kept out of AI tools entirely.","Sacred and restricted material needs separate, protected storage and access rules."]},
+    {v:"personal", l:"Personal or health information about living people", flag:["caution","Personal information should be kept out of AI tools, or removed first.","Personal information needs protected storage and limited access."]},
+    {v:"locations", l:"Locations of sacred sites, graves or resources", flag:["caution","Location details should be kept out of AI tools and out of public search.","Location details must be kept out of public search and maps."]},
+    {v:"legal", l:"Land claims or legal matters", flag:["caution","Legal and land-claim material should be kept out of AI tools.","Legal and land-claim material needs restricted access."]},
+    {v:"children", l:"Material about children", flag:["caution","Material about children should be kept out of AI tools.","Material about children needs restricted access."]},
+    {v:"none", l:"None of these"},
+    {v:"unsure", l:"Not sure", flag:["caution","Check with knowledge holders before any processing.","Check with knowledge holders before anything is shared or published."]}]},
+  {id:"sorted", type:"single", label:"Have you sorted the material by who may see it: already public, community only, or restricted?", hint:"These are the green, yellow and red lights described above.",
+    why:"For example: open to all; community only; family or clan only; knowledge holders only; never digitised. Your own finer levels fit inside the three lights: anything not open to all is yellow or red.",
+    opts:[
+    {v:"yes", l:"Yes"},
+    {v:"partly", l:"Partly", flag:["caution","Only fully sorted material should go anywhere near AI.","Finish sorting before anything is shared or published."]},
+    {v:"no", l:"No", flag:["stop","Sort material by who may see it before using AI. Otherwise red-light items may be processed by accident.","Sort material by who may see it before anything is shared. Otherwise red-light items may be published by accident."]}]},
+  {id:"originals", type:"single", label:"Do you keep complete copies of the originals that you control?", opts:[
+    {v:"multiple", l:"Yes, at least two copies, one of them offline"},
+    {v:"one", l:"One copy only", flag:["caution","Make a second copy, kept offline, before any processing.","Make a second copy, kept offline, as soon as you can."]},
+    {v:"no", l:"No", flag:["stop","Secure your own copies first. Never rely on an AI provider or website to hold the only copy.","Secure your own copies first. Never rely on a website or outside service to hold the only copy."]}]}
+  ]},
+{ id:"tasks", title:"What AI would do", short:"Tasks", show:fullPath,
+  intro:"Choose only the tasks where AI would save real effort. The note under each one says how well it tends to work. When you choose a task, the risks that come with it appear below the list. For each risk, say whether your group understands it or needs to discuss it more; each one needs an answer before you continue. After those come the risks that apply to every task, and how the work will be checked.",
+  qs:[
+  {id:"tasks", type:"multi", label:"What would you like AI to help with?", hint:"Choose all that apply.", opts:[
+    {v:"transcribe", l:"Transcribe audio and video", n:"Fast for major languages. Struggles with minority languages, accents, elders' voices and noisy recordings."},
+    {v:"ocr", l:"Turn scanned documents into searchable text (OCR)", n:"Works well on clean print. Misreads handwriting, faded pages and special characters."},
+    {v:"translate", l:"Translate between languages", n:"Rough drafts only. Poor or unavailable for many local languages."},
+    {v:"qc", l:"Check existing records for errors and inconsistencies", n:"Lower risk: AI flags possible problems, people decide, and no AI-written text enters the archive. It still misses some problems and flags some that are fine."},
+    {v:"describe", l:"Suggest descriptions and tags for photos and objects", n:"Guesses names, places and meanings, and may apply outside or offensive labels."},
+    {v:"summarise", l:"Summarise and add keywords", n:"Can flatten stories, skip parts of long recordings and add details that are not there."},
+    {v:"search", l:"A search tool or chatbot for visitors", n:"Highest risk: can reveal restricted content and invent answers that are not in the archive."},
+    {v:"website", l:"Build or fix the archive website", n:"Can expose passwords or make private pages public if changes are not checked."},
+    {v:"advice", l:"Not sure yet; we want advice"}]},
+  {id:"reviewer", type:"single", label:"Who will check AI output before it is saved to the archive?", opts:[
+    {v:"community", l:"Community members who know the material"},
+    {v:"staff", l:"Staff or researchers", flag:["caution","Involve community knowledge holders in checking descriptions, names and meanings."]},
+    {v:"both", l:"Both, working together"},
+    {v:"none", l:"No one identified yet", flag:["stop","Every AI output needs a person to check it. Identify reviewers, and plan to pay them fairly, before starting."]}]},
+  {id:"reviewSort", type:"single", follow:true, show:function(a){return a.reviewer&&a.reviewer!=="none";},
+    label:"How will reviewers record what they decide about each AI suggestion?",
+    why:"A shared set of categories makes checking faster and more consistent, and over time shows where the AI goes wrong. The five categories are adapted from library cataloguing work at Clemson University Libraries.",
+    list:{intro:"One approach is to put every AI suggestion into one of five categories:", items:[
+      ["Real error","The AI found a genuine mistake. Fix it."],
+      ["Needs a decision","It is unclear. A knowledgeable person decides."],
+      ["Optional tidy-up","A consistency improvement. Fix it if time allows."],
+      ["Our own practice","Community terms or protocols apply. Keep it as it is."],
+      ["False alarm","Nothing is wrong. Ignore it."]]},
+    opts:[
+    {v:"five", l:"We will use the five categories above"},
+    {v:"own", l:"We will use our own categories instead"},
+    {v:"undecided", l:"Not decided yet", flag:["caution","Agree simple categories for review decisions, so checking is consistent and mistakes can be tracked."]}]},
+  {id:"tested", type:"single", label:"Have you tested an AI tool on a sample of your own material?",
+    why:"Advertised accuracy rarely matches real community material. A test on 10 to 20 items you know well shows the real error rate, and how long checking really takes.",
+    opts:[
+    {v:"good", l:"Yes, and the results were good enough"},
+    {v:"mixed", l:"Yes, with mixed results", flag:["caution","Limit use to the tasks and material where results were acceptable."]},
+    {v:"no", l:"Not yet"}]}
+  ]},
+{ id:"options", title:"Deciding how to go ahead", short:"Decide", show:notAgainst,
+  intro:"Using AI is a choice, not a requirement. This step is about the decision itself: which ways forward you have compared, including not using AI at all, which you lean towards, and what would make you stop. Where AI would run and which accounts to use come in a later step.",
+  qs:[
+  {id:"considered", type:"multi", label:"Which approaches has your group discussed?", hint:"Choose all that apply.", opts:[
+    {v:"noai", l:"Not using AI: doing the work by hand", n:"Slower, but no new risks. Funding for paid transcribers or trained volunteers can also build skills in the community."},
+    {v:"wait", l:"Waiting: organise, get consent and sort material first", n:"Often the wisest start, and useful whatever you decide later."},
+    {v:"trial", l:"A small trial on green-light (already public) material", n:"Low risk; shows real accuracy and effort before any bigger decision."},
+    {v:"partner", l:"Partnering with a university, library or Indigenous data network", n:"Can bring skills and funding. Make sure the partnership benefits the community on its terms."},
+    {v:"developer", l:"Hiring a developer or consultant", n:"Brings expertise; the brief from this guide sets out your requirements."}]},
+  {id:"compared", type:"single", label:"Have you compared using AI with doing the work without it?", why:"Include the time needed to prepare material and check AI output. For difficult material, correcting AI work can take as long as doing it by hand.", opts:[
+    {v:"yes", l:"Yes"},
+    {v:"partly", l:"Partly", flag:["caution","Compare time, cost and risk for at least one option that does not use AI."]},
+    {v:"no", l:"No", flag:["caution","Compare time, cost and risk for at least one option that does not use AI."]}]},
+  {id:"prefer", type:"single", label:"Which option does the group currently lean towards?", opts:[
+    {v:"noai", l:"Not using AI"},{v:"wait", l:"Not now; preparing first"},{v:"trial", l:"A small trial"},{v:"wider", l:"Wider use"},{v:"undecided", l:"Undecided"}]},
+  {id:"stop", type:"single", label:"Have you agreed what would make you pause or stop?", opts:[
+    {v:"yes", l:"Yes"},
+    {v:"no", l:"Not yet", flag:["caution","Agree in advance what would make you stop: for example, too many errors, a leak, a change in a provider's terms, or community concern."]}]}
+  ]},
+{ id:"storage", title:"Storage and resources", short:"Storage", show:function(a){return a.discussed!=="not";},
+  intro:"Where the archive lives, how people reach it, and what it will cost to keep going.",
+  qs:[
+  {id:"connect", type:"single", label:"What is internet access like for the people who work on and use the archive?", opts:[
+    {v:"reliable", l:"Reliable and reasonably fast for almost everyone"},
+    {v:"mixed", l:"Mixed: some people rely on basic phones or slow connections", flag:["caution","Make sure the archive works on basic phones and slow connections."]},
+    {v:"patchy", l:"Slow or unreliable for most people", flag:["caution","Ask for tools that work offline or sync when a connection is available.","Ask for a system that works offline or syncs when a connection is available."]},
+    {v:"offline", l:"Mostly offline", flag:["caution","Local, offline tools will be needed.","An offline or local copy of the archive will be needed."]}]},
+  {id:"location", type:"single", label:"Where must the material be stored?", opts:[
+    {v:"community", l:"Within our community (our own computers or servers)"},
+    {v:"country", l:"Within our country"},
+    {v:"none", l:"No requirement"},
+    {v:"unsure", l:"Not sure"}]},
+  {id:"budget", type:"single", label:"What budget is available?", opts:[
+    {v:"none", l:"No budget", flag:["caution","Free tools often cost you in other ways, such as your data. Plan for long-term costs before relying on any tool.","Plan for the long-term costs of storage, backups and hosting before relying on any service."]},
+    {v:"oneoff", l:"A one-off amount"},
+    {v:"ongoing", l:"Ongoing funding"},
+    {v:"unsure", l:"Not sure"}]},
+  ]},
+{ id:"control", title:"Where AI runs", short:"AI setup", show:fullPath,
+  intro:"Decide which material may go into AI tools, where the processing happens, and who at the provider can see it.",
+  qs:[
+  {id:"aiLights", type:"single", label:"Which material may go into AI tools at all?",
+    hint:"Green light is already public, yellow light is for the community only, and red light is restricted, sacred or sensitive.",
+    opts:[
+    {v:"g", l:"Green-light material only"},
+    {v:"gy", l:"Green- and yellow-light material", n:"Yellow-light material only with the community's agreement, and only with tools on our own computers or services with a written no-training promise."},
+    {v:"all", l:"Any material, including red-light", flag:["stop","Red-light material should never go into AI tools. Limit AI to green-light material, or green and yellow with safeguards."]},
+    {v:"undecided", l:"Not decided", flag:["caution","Decide which material may go into AI tools before anything is uploaded."]}]},
+  {id:"where", type:"single", label:"Where should AI processing happen?",
+    why:"Tools that run on your own computers keep material private and keep working without internet, but may need more setup. Online (cloud) tools are easier but send material to a company's computers, often in another country.",
+    opts:[
+    {v:"local", l:"Only on computers we control (offline or local tools)"},
+    {v:"cloud", l:"An online (cloud) service, under a written agreement"},
+    {v:"advise", l:"No preference yet; we want advice"}]},
+  {id:"account", type:"single", follow:true, show:function(a){return notAgainst(a)&&a.where&&a.where!=="local";},
+    label:"What kind of AI accounts would be used?",
+    why:"On most free and personal accounts, chats can be used to train the company's AI unless you switch this off, and turning it off only protects future chats. Business, education, nonprofit and developer (API) accounts often do not train on your data by default, but check the terms. On any account, avoid the feedback buttons on chats with archive material, because feedback can be kept even when training is off.",
+    opts:[
+    {v:"personal", l:"Free or personal accounts", flag:["caution","Switch off training settings on every account before use, and use these only for green-light (already public) material."]},
+    {v:"business", l:"Business, education or nonprofit accounts with a data agreement"},
+    {v:"api", l:"Through a developer (API) with a contract"},
+    {v:"undecided", l:"Not decided"}]},
+  {id:"provider", type:"single", follow:true, show:function(a){return a.where&&a.where!=="local"&&a.account!=="personal";},
+    label:"Has the provider confirmed in writing who can see your material, where it is processed, how long it is kept, and that you can delete it?",
+    why:"A written agreement is what turns a company's general promises into commitments. The questions at the end of your brief can be sent to providers to get these answers.",
+    opts:[
+    {v:"yes", l:"Yes, all of these"},
+    {v:"partly", l:"Some of these", flag:["caution","Get the missing points in writing before uploading anything beyond green-light material."]},
+    {v:"no", l:"Not yet", flag:["caution","Get written answers on access, location, retention and deletion before uploading anything beyond green-light material."]}]},
+  {id:"localHelp", type:"single", follow:true, show:function(a){return a.where==="local";},
+    label:"Who will set up and look after tools on your own computers?",
+    why:"Local tools keep material private, but someone needs to install them, keep them updated and fix problems.",
+    opts:[
+    {v:"community", l:"Someone in the community"},
+    {v:"partner", l:"A partner or volunteer"},
+    {v:"paid", l:"Paid technical help"},
+    {v:"none", l:"No one yet", flag:["caution","Find someone who can set up and maintain local tools before relying on them."]}]}
+
+  ]},
+{ id:"ongoing", title:"Governance", short:"Governance", show:fullPath,
+  intro:"Decisions only hold if someone looks after them. These questions cover day-to-day responsibility, new tools, and what to do when something goes wrong.",
+  qs:[
+  {id:"g_owner", type:"single", label:"Who is responsible for how AI is used in the project, day to day?", opts:[
+    {v:"person", l:"A named person or role"},
+    {v:"group", l:"A small group or committee"},
+    {v:"undecided", l:"Not decided", flag:["caution","Name one person or group to look after AI use, so questions and problems have somewhere to go."]}]},
+  {id:"g_newtools", type:"single", label:"Who approves a new AI tool before anyone uses it with archive material?", opts:[
+    {v:"authority", l:"The people with decision authority for the archive"},
+    {v:"lead", l:"The project lead, reporting back to the community"},
+    {v:"anyone", l:"No approval: people choose their own", flag:["caution","Agree that new tools are approved before use. Each tool has its own terms, training settings and risks."]},
+    {v:"undecided", l:"Not decided", flag:["caution","Agree who approves new AI tools before they are used with archive material."]}]},
+  {id:"aiAccess", type:"single", label:"Who in the project will be able to use the AI tools with archive material?",
+    opts:[
+    {v:"named", l:"Named people only, each with their own account or login"},
+    {v:"shared", l:"Several people sharing one login", flag:["caution","Give each person their own account. With a shared login you cannot tell who uploaded what, or remove one person's access."]},
+    {v:"anyone", l:"Anyone working on the archive", flag:["caution","Limit AI use with archive material to named, trained people."]},
+    {v:"undecided", l:"Not decided", flag:["caution","Decide who may use AI tools with archive material."]}]},
+  {id:"g_personal", type:"single", label:"Are there rules about people using their own AI apps or accounts with archive material?",
+    why:"Staff and volunteers may already use AI on their own phones and computers, often with good intentions. This 'shadow AI' is one of the most common ways material leaks, because personal accounts may train on what is uploaded.",
+    opts:[
+    {v:"written", l:"Yes, written down and known to everyone"},
+    {v:"informal", l:"Informal understanding only", flag:["caution","Write down a short rule, such as: archive material never goes into personal AI apps or accounts."]},
+    {v:"none", l:"No rules", flag:["caution","Agree and write down a rule about personal AI apps and accounts. Include AI features built into email, phones and office software."]}]},
+  {id:"g_learn", type:"single", label:"How will new staff and volunteers learn the rules?", opts:[
+    {v:"induction", l:"A short introduction when they join"},
+    {v:"sheet", l:"A one-page summary they are given"},
+    {v:"none", l:"Not planned", flag:["caution","Plan how newcomers learn the AI rules. A one-page summary is enough to start."]}]},
+  {id:"g_incident", type:"single", label:"If something goes wrong, such as a leak or a harmful description, is there an agreed plan?",
+    why:"A good plan says who is told, how material is taken down or corrected, how affected families or knowledge holders are informed, and what changes afterwards.",
+    opts:[
+    {v:"yes", l:"Yes"},
+    {v:"no", l:"Not yet", flag:["caution","Agree who is told, how material is taken down, and how affected people are informed if something goes wrong."]}]},
+  {id:"g_recheck", type:"single", label:"How often will you recheck providers' terms and account settings?",
+    why:"Companies change their terms, settings and prices, often with little notice.",
+    opts:[
+    {v:"six", l:"Every six months"},
+    {v:"year", l:"Once a year"},
+    {v:"none", l:"Not planned", flag:["caution","Set a regular date to recheck providers' terms and every account's training settings."]}]},
+  {id:"g_report", type:"single", label:"Will results, including mistakes, be reported back to the community, with a regular review of whether to continue?",
+    opts:[
+    {v:"six", l:"Yes, at least every six months"},
+    {v:"year", l:"Yes, once a year"},
+    {v:"none", l:"Not planned", flag:["caution","Plan to report results, including mistakes, to the community, and review together whether to continue."]}]}
+  ]},
+{ id:"values", title:"Access", short:"Access",
+  intro:"Who will use the archive, and how its access rules stay with the material.",
+  qs:[
+  {id:"audience", type:"multi", label:"Who should be able to use the archive?", hint:"Choose all that apply.", opts:[
+    {v:"community", l:"Community members"},
+    {v:"public", l:"The general public"},
+    {v:"researchers", l:"Approved researchers"},
+    {v:"tiered", l:"Different people see different things, following our protocols"}]},
+  {id:"labels", type:"single", label:"Would you like the archive to support Traditional Knowledge (TK) or Biocultural (BC) Labels, or your own protocol labels?",
+    why:"TK and BC Labels, developed by Local Contexts, let communities attach their own rules and attribution to digital material, so those rules travel with it.",
+    opts:[{v:"yes", l:"Yes"},{v:"maybe", l:"Maybe; tell us more"},{v:"no", l:"Not relevant to us"}]}
+  ]}
+];
+
+/* ---------- State ---------- */
+var KEY="aiArchiveGuide.v1";
+var A={}, view="intro", stepIdx=0;
+function load(){ try{ var s=localStorage.getItem(KEY); if(s){ var o=JSON.parse(s); A=o.A||{}; if(A.consent==="unsure") delete A.consent; if(A.p_ethics==="na") delete A.p_ethics;
+      if(Array.isArray(A.considered)){ if(A.considered.indexOf("agentic")>-1&&!A.agentUse) A.agentUse=A.agentSup==="none"?"nosup":"sup";
+        A.considered=A.considered.filter(function(v){return ["local","cloud","personal","agentic"].indexOf(v)<0;}); } delete A.agentSup; delete A.exitPlan;
+      if((A.devices==="many"||A.devices==="some")&&(!A.connect||A.connect==="reliable")) A.connect="mixed"; delete A.devices;
+      if(Array.isArray(A.commit)&&!A.g_report&&(A.commit.indexOf("review")>-1)) A.g_report="six"; delete A.commit; } }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify({A:A})); }catch(e){} }
+function clearAll(){ A={}; try{ localStorage.removeItem(KEY); }catch(e){} }
+function has(arr,v){ return Array.isArray(arr)&&arr.indexOf(v)>-1; }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+(function(){ var k=STEPS.map(function(x){return x.id;}).indexOf("tasks"), ts=STEPS[k];
+  var choose=ts.qs.filter(function(q){return q.id==="tasks";}), rest=ts.qs.filter(function(q){return q.id!=="tasks";});
+  ts.qs=choose.concat(groupBlocks(), sharedInTasks(), rest);
+  Array.prototype.splice.apply(STEPS,[k+1,0].concat(taskSteps())); })();
+var DKMAP={};
+STEPS.forEach(function(st){ st.qs.forEach(function(q){ q.step=st; DKMAP[DK(q)]=q; }); });
+function stepOn(st){ return !st.show||st.show(A); }
+function activeSteps(){ return STEPS.filter(stepOn); }
+function visible(q){ return (!q.step||stepOn(q.step)) && (!q.show || q.show(A)); }
+function allQs(){ var o=[]; STEPS.forEach(function(s){ s.qs.forEach(function(q){ o.push(q); }); }); return o; }
+function missingRisks(st){ return st?st.qs.filter(function(q){return q.learn&&visible(q)&&!A[q.id];}):[]; }
+function showNeed(miss){
+  var old=document.getElementById("needAns"); if(old) old.remove();
+  var msg=document.createElement("p"); msg.id="needAns"; msg.className="flag caution"; msg.setAttribute("role","alert");
+  msg.innerHTML='<b>Answer each risk to continue</b>For each one, choose whether your group understands it or needs to discuss it more. Still to answer: '+esc(miss.map(function(q){return q.topicTitle;}).join("; "))+'.';
+  var nr=document.getElementById("navrow"); if(nr) nr.parentNode.insertBefore(msg,nr);
+  var first=app.querySelector('[data-q="'+DK(miss[0])+'"]'); if(first){ first.scrollIntoView({block:"start"}); var inp=first.querySelector("input"); if(inp) inp.focus({preventScroll:true}); }
+}
+function DK(q){ return q.dk||q.id; }
+function Q(id){ return allQs().filter(function(q){return q.id===id;})[0]; }
+function optL(id,v){ var q=Q(id); if(!q||!q.opts) return v; var o=q.opts.filter(function(x){return x.v===v;})[0]; return o?o.l:v; }
+function val(id){ var q=Q(id); if(!q||!visible(q)) return undefined; return A[id]; }
+function hasAnswers(){ return Object.keys(A).some(function(k){ var v=A[k]; return Array.isArray(v)?v.length:!!v; }); }
+
+var app=document.getElementById("app");
+
+/* ---------- Rendering ---------- */
+function trail(){
+  var items=activeSteps().map(function(s,i){
+    var cls=(view==="step"&&i===stepIdx?"cur ":"")+((view==="results"||(view==="step"&&i<stepIdx))?"done":"");
+    return '<li class="'+cls+'"><button type="button" data-go="'+i+'"'+(view==="step"&&i===stepIdx?' aria-current="step"':'')+'><span class="node">'+(i+1)+'</span>'+esc(A.discussed==="not"&&s.shortNot?s.shortNot:s.short)+'</button></li>';
+  });
+  items.push('<li class="'+(view==="results"?"cur done":"")+'"><button type="button" data-go="results"'+(view==="results"?' aria-current="step"':'')+'><span class="node">\u2713</span>'+(A.discussed==="not"?"Pack":"Brief")+'</button></li>');
+  return '<nav class="trail-box" aria-label="Guide steps"><ol class="trail">'+items.join("")+'</ol></nav>';
+}
+
+function renderIntro(){
+  var resume=hasAnswers();
+  app.innerHTML =
+  '<section class="hero">'+
+  '<h1>Should we use AI to build our archive?</h1>'+
+  '<p class="lead">A guide for communities, archives and researchers deciding whether and how to use AI with community records. Work through the questions together, then download a project brief to share with a developer.</p>'+
+  '<div class="btns">'+
+    (resume?'<p class="saved-note">Answers from an earlier visit are saved in this browser.</p><button class="btn" data-act="resume">Continue where you left off</button><button class="btn plain" data-act="restart">Clear answers and start over</button>'
+           :'<button class="btn" data-act="start">Start the guide</button>')+
+  '</div></section>'+
+  '<div class="facts">'+
+   '<div class="fact"><h3>What AI can do</h3><p>Transcribe recordings, read scanned documents, suggest descriptions, draft translations and make large collections searchable, much faster than by hand.</p></div>'+
+   '<div class="fact"><h3>What it cannot do</h3><p>Decide what is sacred, private or appropriate to share, or who has the right to tell a story. Those decisions stay with people.</p></div>'+
+   '<div class="fact"><h3>How well it works</h3><p>AI makes confident mistakes, loses track of long material, works poorly in many local languages, and changes when companies update it. Someone always has to check its work.</p></div>'+
+   '<div class="fact"><h3>How risky it is</h3><p>For a community that follows a few basic habits, a moderate, manageable risk. Serious harms, like leaks of sacred material, are rare and are prevented by keeping restricted material away from AI. Common problems, like errors and bias, will appear, but careful checking stops them from entering the archive.</p></div>'+
+   '<div class="fact"><h3>Habits that prevent most problems</h3><div><ul class="habits">'+
+     '<li>Keep restricted and sacred material out of AI tools completely.</li>'+
+     '<li>Have a knowledgeable person check everything before it is saved.</li>'+
+     '<li>Keep your own full copies of the originals.</li>'+
+     '<li>Use tools that promise in writing not to reuse your material.</li>'+
+     '<li>Label AI-made content clearly.</li></ul></div></div>'+
+   '<div class="fact"><h3>Doing nothing has risks too</h3><p>Tapes and photos decay, elders pass on, and backlogs can take decades by hand. The aim is not to avoid all risk, but to choose the risks you can manage.</p></div>'+
+  '</div>'+
+  '<div class="how"><h2 style="font-size:1.35rem">How this guide works</h2>'+
+   '<ol><li>Work through short steps about your community, your material, the risks and your options. The steps adapt to your answers: if your community has not discussed AI yet, you take a shorter path that ends in a discussion pack; researchers and institutions get questions on partnership terms; and you only see limits that apply to the tasks you choose.</li>'+
+   '<li>For each risk and limit, read a plain explanation of how likely it is and how to reduce it, then say where your group stands. Notes appear as you answer, flagging anything to address first.</li>'+
+   '<li>At the end you get a readiness result, and either a project brief written as clear requirements a developer can act on, or a discussion pack for your community conversation.</li></ol>'+
+   '<p class="small muted">It takes about 20 to 60 minutes, depending on your path, and works best in a group, perhaps over more than one meeting. Your answers are kept only in this browser so you can come back later; nothing is sent anywhere.</p></div>'+
+  '<p class="foot">This guide supports community decision-making. It does not replace legal advice or your community\u2019s own processes. Account settings last checked: '+CHECKED+'.</p>';
+}
+
+function qHTML(q){
+  var vis=visible(q);
+  var h='<div class="q'+(q.follow?' follow':'')+'" data-q="'+DK(q)+'"'+(vis?'':' hidden')+'>';
+  var qw=T(q.why,q.whyNoAI), why=qw?'<details class="why"><summary>Why this matters</summary><p>'+esc(qw)+'</p></details>':'';
+  if(q.type==="note"){
+    return h+'<h3 class="subhead">'+esc(q.title)+'</h3><p class="muted">'+esc(q.text)+'</p></div>';
+  }
+  if(q.type==="text"){
+    h+='<label class="qlabel" for="f_'+q.id+'">'+esc(T(q.label,q.labelNoAI))+'</label>'+why+
+       '<input type="text" id="f_'+q.id+'" name="'+q.id+'" value="'+esc(A[q.id]||"")+'" placeholder="'+esc(q.ph||"")+'" autocomplete="off">';
+  } else {
+    var t=q.type==="multi"?"checkbox":"radio";
+    if(q.learn){ var L=q.learn;
+      h+='<div class="learn"><h3>'+esc(q.topicTitle)+'</h3><p>'+esc(L.means)+'</p><p class="ex">Example: '+esc(L.ex)+'</p>'+
+        (L.odds?'<ul class="odds"><li><b>If careless:</b> '+esc(L.odds[0])+'</li><li><b>With precautions:</b> '+esc(L.odds[1])+'</li><li><b>Harm if it happens:</b> '+esc(L.odds[2])+'</li></ul>':'')+
+        '<h4>How to reduce it</h4><ul class="reduce">'+L.reduce.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul></div>'; }
+    h+='<fieldset><legend>'+esc(T(q.label,q.labelNoAI))+'</legend>'+(q.hint?'<p class="qhint">'+esc(typeof q.hint==="function"?q.hint(A):q.hint)+'</p>':'')+why+
+      (q.list?'<p class="qhint">'+esc(q.list.intro)+'</p><ol class="catlist">'+q.list.items.map(function(it){return '<li><b>'+esc(it[0])+'.</b> '+esc(it[1])+'</li>';}).join("")+'</ol>':'')+'<div class="opts">';
+    q.opts.forEach(function(o){
+      var chk=q.type==="multi"?has(A[q.id],o.v):A[q.id]===o.v;
+      h+='<label class="opt"><input type="'+t+'" name="'+DK(q)+'" value="'+o.v+'"'+(chk?' checked':'')+'><span class="ol"><span>'+esc(o.l)+'</span>'+(o.n?'<span class="note">'+esc(o.n)+'</span>':'')+'</span></label>';
+    });
+    h+='</div><div class="flags" aria-live="polite">'+flagsHTML(q)+'</div></fieldset>';
+  }
+  return h+'</div>';
+}
+var FLAGHEAD={stop:"Address this first",caution:"Worth attention",ok:"On track"};
+function selectedFlags(q){
+  if(!q.opts) return [];
+  var sel=q.type==="multi"?(A[q.id]||[]):(A[q.id]?[A[q.id]]:[]);
+  return q.opts.filter(function(o){return o.flag&&sel.indexOf(o.v)>-1;}).map(function(o){return {lvl:o.flag[0],text:T(o.flag[1],o.flag[2]),q:q};});
+}
+function flagsHTML(q){
+  return selectedFlags(q).map(function(f){return '<div class="flag '+f.lvl+'"><b>'+FLAGHEAD[f.lvl]+'</b>'+esc(f.text)+'</div>';}).join("");
+}
+
+var curStep=null;
+function skipNote(st){ return "";
+  var hid=st.qs.filter(function(q){return q.learn&&q.show&&!q.show(A);});
+  if(!hid.length) return "";
+  return '<p class="flag ok small" style="margin-top:2rem"><b>Not shown</b>These topics do not apply to the tasks and material you chose: '+esc(hid.map(function(q){return q.topicTitle;}).join("; "))+'. To see them, go back to Tasks and add tasks or choose \u2018Not sure yet\u2019.</p>';
+}
+function navHTML(){ var n=activeSteps().length; return '<button class="btn ghost" data-act="back">Back</button><button class="btn" data-act="next">'+(stepIdx===n-1?"See your results":"Continue")+'</button>'; }
+function renderStep(){
+  var steps=activeSteps(); if(stepIdx>=steps.length) stepIdx=steps.length-1;
+  var s=steps[stepIdx]; curStep=s;
+  app.innerHTML=trail()+
+   '<section><p class="count" id="count">Step '+(stepIdx+1)+' of '+steps.length+'</p><h2 tabindex="-1" id="stepHead">'+esc(A.discussed==="not"&&s.titleNot?s.titleNot:T(s.title,s.titleNoAI))+'</h2>'+
+   '<p class="lead">'+esc(T(s.intro,s.introNoAI))+'</p>'+(s.id==="material"?lightKeyHTML():'')+''+ s.qs.map(qHTML).join("")+ skipNote(s)+
+   '<div class="navrow" id="navrow">'+navHTML()+'</div></section>';
+}
+function refreshStep(){
+  if(!curStep) return;
+  curStep.qs.forEach(function(q){
+    var el=app.querySelector('[data-q="'+DK(q)+'"]'); if(!el) return;
+    el.hidden=!visible(q);
+    if(q.type==="single") [].forEach.call(el.querySelectorAll('input[type=radio]'),function(i){ i.checked=(A[q.id]===i.value); });
+    var f=el.querySelector(".flags"); if(f) f.innerHTML=flagsHTML(q);
+  });
+  var steps=activeSteps(), i=steps.indexOf(curStep); if(i>-1) stepIdx=i;
+  var tb=app.querySelector(".trail-box"); if(tb) tb.outerHTML=trail();
+  var c=document.getElementById("count"); if(c) c.textContent="Step "+(stepIdx+1)+" of "+steps.length;
+  var nr=document.getElementById("navrow"); if(nr) nr.innerHTML=navHTML();
+}
+
+/* ---------- Results logic ---------- */
+function analyse(){
+  var stops=[],cautions=[];
+  allQs().forEach(function(q){ if(!visible(q)) return; selectedFlags(q).forEach(function(f){ if(q.id==="discussed"&&f.lvl==="stop") return; if(f.lvl==="stop") stops.push(f); else if(f.lvl==="caution") cautions.push(f); }); });
+  var LR={g:1,gy:2,all:3}, SR={public:1,community:2,all:3};
+  if(visible(Q("aiLights"))&&visible(Q("searchScope"))&&LR[A.aiLights]&&SR[A.searchScope]&&SR[A.searchScope]>LR[A.aiLights])
+    cautions.push({lvl:"caution",text:"The search tool is set to draw on more material than you allowed for AI tools in general. Limit it to "+(A.aiLights==="g"?"green-light material only":"green- and yellow-light material, behind access checks")+", or change the general limit.",q:Q("searchScope")});
+  if(visible(Q("aiLights"))&&A.aiLights==="gy"&&visible(Q("account"))&&A.account==="personal")
+    cautions.push({lvl:"caution",text:"Yellow-light material should not go into free or personal accounts. Use tools on your own computers or a service with a written no-training agreement, or limit AI to green-light material.",q:Q("account")});
+  var v;
+  if(A.discussed==="against") v="decided";
+  else if(A.discussed==="not") v="prepare";
+  else if(stops.length) v="notyet";
+  else if(A.tested==="good"&&!cautions.length&&A.discussed==="agreed") v="expand";
+  else v="trial";
+  return {v:v,stops:stops,cautions:cautions};
+}
+var VERDICT={
+  prepare:{stage:0,light:"a",title:"Start with a community conversation",text:"Your community has not discussed AI yet, so the next step is a conversation, not technology. The discussion pack below gives you an agenda, the main risks in plain language, and questions to talk through together."},
+  decided:{stage:-1,light:"r",title:"Your community has decided not to use AI",text:"That is a legitimate choice. The brief below describes archive work that does not rely on AI, so a developer can still help you organise, protect and share your records."},
+  notyet:{stage:0,light:"r",title:"Not yet: prepare first",text:"Some essentials need to be in place before any material goes near AI. That is a common and sensible starting point. Work on the items below, then come back to this guide."},
+  trial:{stage:1,light:"a",title:"Ready to plan a small trial",text:"The foundations are mostly in place. Start with one tool on a small set of green-light (already public) material, check the results carefully, and report back to the community before going further."},
+  expand:{stage:2,light:"g",title:"Ready to expand, carefully",text:"Your community has agreed, the foundations are in place, and a trial went well. Expand step by step, keep checking every output, and review together regularly."}
+};
+function nextSteps(r){
+  var s=[];
+  if(r.v==="decided"){ s.push("Share this brief with the community so the decision and its reasons are on record.","Focus on organising, describing and backing up the archive by hand.","Revisit the question later if the community wishes; decisions can change."); return s; }
+  if(r.v==="prepare"){ s.push("Hold the community conversation using the discussion pack below.");
+    if(A.c_when!=="yes") s.push("Set a time and place that suits elders, families and people who work during the day.");
+    s.push("Prepare in the meantime: sort material into access levels and make a second, offline copy of originals.","Afterwards, come back and update your answers. If the community agrees to explore AI, the guide will take you through tasks, limits and control, and produce a developer brief."); return s; }
+  if(r.v==="notyet") s.push("Work through the items under 'Address this first'. Most can be done without any technology.");
+  s.push("Share this brief with the community before sending it to a developer.");
+  if(A.tested!=="good") s.push("Test one tool on 10 to 20 items your community knows well. Count mistakes and time the whole job, including checking.");
+  s.push("Ask any developer or provider to answer the questions at the end of the brief, in writing.");
+  s.push("Agree a date to review how things are going, and what would make you stop.");
+  return s;
+}
+
+/* ---------- Brief (shared by preview, PDF and text) ---------- */
+function list(id){ var v=val(id); return Array.isArray(v)&&v.length?v.map(function(x){return optL(id,x);}).join("; "):null; }
+function one(id){ var v=val(id); return v?optL(id,v):null; }
+function finish(B){
+  B.sections.forEach(function(x,i){ x.h=(i+1)+". "+x.h.replace(/^\d+\. /,""); });
+  B.footer="Produced with the Community AI Archive Decision Guide. This document supports, and does not replace, community decision-making.";
+  return B;
+}
+function metaFor(){ var m=[]; if(A.org) m.push(["Community or organisation",A.org]); if(A.contact) m.push(["Contact",A.contact]); if(A.authority) m.push(["Decision authority",A.authority]); m.push(["Prepared",new Date().toISOString().slice(0,10)]); return m; }
+function buildPack(){
+  var r=analyse(), V=VERDICT[r.v];
+  var B={title:"Community Discussion Pack", subtitle:A.project||"Using AI for our archive", meta:metaFor(), sections:[]};
+  var prep=dedupe(r.stops.concat(r.cautions).filter(function(f){return f.q.id!=="discussed";}).map(function(f){return f.text;}));
+  var s1={h:"Where we are",blocks:[{t:"p",x:V.text}]};
+  if(prep.length) s1.blocks.push({t:"h4",x:"Things to prepare"},{t:"ul",items:prep});
+  B.sections.push(s1);
+  B.sections.push({h:"Green, yellow and red light",blocks:[{t:"p",x:LIGHTS_NOTE},{t:"ul",items:LIGHTS.map(function(L){return L.name+": "+L.what+" "+L.rule;})}]});
+  var kv=[]; function add(k,v){ if(v) kv.push([k,v]); }
+  add("Who to invite",list("c_who")); add("Host",A.c_lead); add("Languages",A.c_lang); add("Time and place set",one("c_when"));
+  add("Examples of AI output",one("c_examples")); add("Thanks or payment",one("c_pay"));
+  B.sections.push({h:"Planning the conversation",blocks:[{t:"kv",items:kv},{t:"p",x:"Hold the meeting in local languages, at a time and place people can attend. Include people with less formal education and those less comfortable with technology, not only those who are. Give people roles, such as note-taker or question-keeper."}]});
+  var mat=list("types"), sens=list("sensitive");
+  B.sections.push({h:"Suggested agenda",blocks:[{t:"ol",items:[
+    {b:"Why we are meeting",x:"To decide together whether, where and how AI might be used with our archive. No, not yet, and only for this part are all valid outcomes."},
+    {b:"What AI can and cannot do",x:"AI can transcribe recordings, read scanned documents, suggest descriptions, draft translations and make collections searchable. It cannot decide what is sacred, private or appropriate to share, or who has the right to tell a story."},
+    {b:"What is in our archive",x:(mat?"We hold: "+mat+". ":"Review what we hold. ")+(sens?"It includes: "+sens+". ":"")+"Agree what must never go near AI."},
+    {b:"The main risks",x:"Go through the risk summary in this pack. Most risks are preventable with a few habits."},
+    {b:"Our options",x:"Not using AI; waiting while we prepare; a small trial on green-light (already public) material; tools on our own computers; online services under a proper agreement; or working with a partner."+(list("considered")?" Already discussed: "+list("considered")+".":"")},
+    {b:"Consent and protocols",x:"Who needs to agree? How will we ask contributors and families, and in which languages? Which cultural protocols apply?"},
+    {b:"Decide next steps",x:"Not now; prepare first; try a small trial; decide against AI; or gather more information. Agree who will do what, and when to meet again."}]}]});
+  B.sections.push({h:"Questions to talk through",blocks:[{t:"ul",items:[
+    "What material would we never want AI to touch?",
+    "Who has the right to decide, and who needs to agree?",
+    "How will we ask contributors and families for consent, and in which languages?",
+    "Who would check AI's work, and how would we thank or pay them?",
+    "Which of our languages matter most, and how well do AI tools handle them?",
+    "Who benefits, and could anyone profit from our material?",
+    "What would make us pause or stop?",
+    "What do we lose if we do nothing: decaying tapes, elders' knowledge, growing backlogs?"]}]});
+  var ST={ok:"Our group: understood and accepting the risk.",discuss:"Our group: needs more discussion.",na:"Our group: not relevant."};
+  B.sections.push({h:"The main risks in plain language",blocks:[{t:"ol",items:allQs().filter(function(q){return q.learn&&visible(q);}).map(function(q){var L=q.learn;
+    return {b:q.topicTitle,x:L.means+(L.odds?" How likely: "+L.odds[0].toLowerCase()+" if careless; "+L.odds[1].toLowerCase()+" with precautions.":"")+" How to reduce it: "+L.reduce.join(" ")+(ST[A[q.id]]?" "+ST[A[q.id]]:"")};})}]});
+  B.sections.push({h:"Five habits that prevent most problems",blocks:[{t:"ul",items:["Keep restricted and sacred material out of AI tools completely.","Have a knowledgeable person check everything before it is saved.","Keep your own full copies of the originals.","Use tools that promise in writing not to reuse your material.","Label AI-made content clearly."]},{t:"p",x:"Doing nothing has risks too: tapes and photos decay, elders pass on, and backlogs can take decades by hand. The aim is to choose the risks the community can manage."}]});
+  return finish(B);
+}
+function buildBrief(){
+  var r=analyse(), V=VERDICT[r.v], today=new Date().toISOString().slice(0,10);
+  if(r.v==="prepare") return buildPack();
+  var B={title:r.v==="decided"?"Archive Project Brief":"AI Archive Project Brief", subtitle:A.project||"Untitled project", meta:[], sections:[]};
+  if(A.org) B.meta.push(["Community or organisation",A.org]);
+  if(A.contact) B.meta.push(["Contact",A.contact]);
+  if(A.authority) B.meta.push(["Decision authority",A.authority]);
+  B.meta.push(["Prepared",today]);
+
+  // 1 readiness
+  var s1={h:"1. Readiness",blocks:[{t:"p",x:"Status: "+V.title+"."},{t:"p",x:V.text}]};
+  if(r.stops.length) s1.blocks.push({t:"h4",x:r.v==="decided"?"To address first":"To address before any AI use"},{t:"ul",items:r.stops.map(function(f){return f.text;})});
+  if(r.cautions.length) s1.blocks.push({t:"h4",x:"Points needing attention"},{t:"ul",items:dedupe(r.cautions.map(function(f){return f.text;}))});
+  s1.blocks.push({t:"h4",x:"Next steps"},{t:"ul",items:nextSteps(r)});
+  B.sections.push(s1);
+
+  // 2 about
+  var kv=[];
+  function add(k,v){ if(v) kv.push([k,v]); }
+  add("Prepared by",one("role")); add("Community agreement",one("discussed")); add("Written ownership agreement",one("agreement"));
+  add("Contributor consent",one("consent")); add("Cultural protocols",one("protocols"));
+  add("Material types",list("types")); add("Languages",A.languages); add("Amount",one("volume"));
+  add("Sensitive material",list("sensitive")); add("Sorted into access levels",one("sorted")); add("Copies of originals",one("originals"));
+  add("Intended users",list("audience")); add("Internet access",one("connect")); 
+  add("Material allowed in AI tools",one("aiLights")); add("Processing location",one("where")); add("Account type",one("account")); add("Provider's written commitments",one("provider")); add("Local tool support",one("localHelp")); add("Who may use AI tools",one("aiAccess"));  add("Storage location",one("location")); add("Budget",one("budget"));
+  add("Environmental priority",one("environment"));
+  B.sections.push({h:"2. About the project",blocks:[{t:"kv",items:kv}]});
+
+  // 3 tasks
+  var tasks=(val("tasks")||[]).filter(function(t){return t!=="advice";});
+  if(r.v!=="decided"){
+    var tb=[];
+    if(tasks.length) tb.push({t:"ul",items:tasks.map(function(t){ var o=Q("tasks").opts.filter(function(x){return x.v===t;})[0]; return o.l+". Known limits: "+o.n; })});
+    if(has(val("tasks"),"advice")||!tasks.length) tb.push({t:"p",x:"The community would like advice on which tasks AI could genuinely help with. Recommend options, with honest accuracy estimates for this material."});
+    if(val("langType")) tb.push({t:"p",x:"Languages in the collection: "+one("langType")+"."});
+    if(val("reviewer")) tb.push({t:"p",x:"Reviewers: "+one("reviewer")+"."});
+    if(val("tested")) tb.push({t:"p",x:"Testing so far: "+one("tested")+"."});
+    B.sections.push({h:"3. Requested AI tasks",blocks:tb});
+  }
+
+  // 4 requirements
+  var R=[];
+  var sens=(val("sensitive")||[]).filter(function(x){return x!=="none";});
+  if(r.v!=="decided"){
+    if(val("aiLights")==="g") R.push({b:"Green-light material only",x:"Only green-light (already public) material may be processed with AI. The system must check each item's access level before any AI processing."});
+    if(val("aiLights")==="gy") R.push({b:"Green- and yellow-light material only",x:"Yellow-light material may be processed only with the community's agreement, and only with tools on computers the community controls or services with a written no-training agreement. The system must check each item's access level before any AI processing."});
+    if(val("aiAccess")==="named"||val("aiAccess")==="shared"||val("aiAccess")==="anyone") R.push({b:"Individual access",x:"Each person who uses AI tools with archive material has their own account or login, so use can be traced and access removed when someone leaves."});
+    R.push({b:"Restricted material stays out of AI",x:"Red-light material (restricted, sacred or sensitive) must never be sent to, stored in or indexed by any AI system. Build this as a technical control, with separate storage and an access-level check before any processing, not just a policy."+(sens.length?" This archive includes: "+sens.map(function(x){return optL("sensitive",x);}).join("; ")+".":"")});
+    R.push({b:"No reuse of the community's data",x:"The material must not be used to train or improve any AI model. Use only services with a written no-training commitment; switch off training settings on every account; do not use feedback buttons on chats containing archive material; confirm retention periods and full deletion on request."});
+    R.push({b:"Human review before anything is saved",x:"All AI output is stored as a draft marked 'Not yet checked'. It becomes part of the archive only after review"+({community:" by community members who know the material",staff:" by staff or researchers",both:" by community members and staff working together"}[val("reviewer")]||"")+". Record who reviewed it (name or role) and the date."+(val("reviewSort")==="five"?" Each decision is recorded as one of five categories: (1) real error, fix it; (2) needs a decision by a knowledgeable person; (3) optional tidy-up for consistency; (4) our own practice, where community terms or protocols apply, keep as is; (5) false alarm, ignore.":val("reviewSort")==="own"?" Each decision is recorded using the community's own review categories.":"")});
+    R.push({b:"Clear labels and a record of AI use",x:"Store, for every AI-made item: tool, model and version; date; source item; review status; reviewer role. Show AI-made content with a visible label in the interface."});
+  }
+  if(r.v==="decided") R.push({b:"No AI processing",x:"The community has decided not to use AI. No archive material is to be uploaded to, stored in or indexed by any AI tool or service. The archive system must not include AI features, or they must be switched off. This includes AI features built into email, office, cloud storage and phone software used to manage the archive."});
+  R.push({b:"Originals preserved",x:"Original files are never altered or replaced. Any derived version (transcript, translation, description) is stored alongside and linked to the original."});
+  var acc="Support access levels (for example: open; community only; family or clan; knowledge holders only), record cultural protocols as metadata, and allow access to be changed or withdrawn later.";
+  if(has(val("audience"),"tiered")) acc+=" Different users must see different material according to community protocols.";
+  if(A.labels==="yes"||A.labels==="maybe") acc+=" Support Traditional Knowledge (TK) and Biocultural (BC) Labels from Local Contexts"+(A.labels==="maybe"?" (to be discussed with the community)":"")+".";
+  R.push({b:"Access control and cultural protocols",x:acc});
+  R.push({b:"Community ownership and no lock-in",x:"Use open file formats (for example WAV or FLAC audio, TIFF images, PDF/A, plain text, CSV or JSON metadata). The community must be able to export everything at any time, and the archive must keep working without "+(r.v==="decided"?"depending on":"any AI tool or")+" any single vendor. Provide plain-language documentation."});
+  if(val("location")&&val("location")!=="none"&&val("location")!=="unsure") R.push({b:"Storage location",x:"All material and backups must be stored "+(val("location")==="community"?"on computers or servers the community controls.":"within the community's country.")});
+  if(r.v!=="decided"){
+    if(val("where")==="local") R.push({b:"Local processing only",x:"All AI processing runs on hardware the community controls, with no material sent to outside services. Prefer open-source tools that work offline."});
+    else R.push({b:"Provider agreements",x:"Use only providers with a written agreement covering: no training on the data; retention period; deletion; storage location; who at the company can access data; and what happens if the company is sold or closes."+(val("account")==="personal"?" Free or personal accounts may be used only for green-light (already public) material, with training settings switched off on every account.":"")});
+  }
+  if(["mixed","patchy","offline"].indexOf(val("connect"))>-1)
+    R.push({b:"Low bandwidth and offline use",x:"Pages must be lightweight and work on basic phones and slow connections. Provide offline access or sync-when-connected where possible, and printable versions of key material."});
+  R.push({b:"Accessibility",x:"Plain language, large readable text, good contrast, keyboard use and screen-reader support. Interface text should be translatable into local languages, with translations checked by community members."});
+  if(r.v!=="decided"){
+    var TS={
+      transcribe:"Transcription: measure accuracy on a sample in each language; split long recordings into short segments; keep timestamps linked to the audio.",
+      ocr:"OCR: preserve diacritics and special characters; keep the page image next to the extracted text.",
+      translate:"Translation: show machine translations only as drafts marked 'machine translated'; never replace the original-language text.",
+      qc:"Record checking: AI only flags possible problems in existing records and never changes a record itself; every flag goes to a person, who sorts it using the agreed review categories; keep a list of flags and decisions so the checks can be improved.",
+      describe:"Descriptions: use a community-approved vocabulary; never auto-identify people (no face recognition); names and places must be confirmed by people.",
+      summarise:"Summaries: work in short sections to avoid lost context; every summary links back to the full item.",
+      search:"Search or chatbot: draw only on "+(val("searchScope")==="community"?"green- and yellow-light material, enforcing each user's access level at every lookup":"green-light (already public) material")+"; every answer cites archive items; say clearly when nothing is found; never answer from general web knowledge.",
+      website:"Website work: never paste passwords, keys or personal data into AI tools; test changes on a copy of the site with backups; a person reviews any change affecting logins or permissions; test as a logged-out visitor, a community member and an admin."
+    };
+    var ts=tasks.map(function(t){return TS[t];}).filter(Boolean);
+    if(ts.length) R.push({b:"Task-specific requirements",list:ts});
+    R.push({b:"Reliability over time",x:"Record and fix the model versions used; retest on the sample set after any update; plan for a tool being withdrawn or repriced."});
+    if(val("environment")==="very"||val("environment")==="somewhat")
+      R.push({b:"Environmental impact",x:"Use the smallest tool that meets accuracy needs; run locally where possible; batch jobs and avoid re-running them; avoid generating images, video or audio unless there is a clear purpose; ask providers for energy and water information."});
+  }
+  if(r.v!=="decided"&&A.e_long!=="na") R.push({b:"Project record",x:"Keep a written record of decisions, naming rules, labels and access decisions, and share it at the start of every AI session. Do not rely on AI chat history as the only record."});
+  if(val("agentUse")==="sup"||val("agentUse")==="nosup") R.push({b:"Agentic tools",x:"If agentic tools are used, they run only on a copy of the files, with backups, never on folders containing restricted material, and every change is reviewed by someone with technical experience before it goes live."});
+  if(stepOn(Q("p_outputs").step)) R.push({b:"Partnership terms",x:"Ownership of outputs: "+(one("p_outputs")||"not answered")+". Community review before sharing: "+(one("p_review")||"not answered")+". Community benefits: "+(list("p_benefit")||"not answered")+"."+(val("p_ethics")?" Ethics approval: "+one("p_ethics")+".":"")+" At project end: "+(one("p_end")||"not answered")+"."});
+  B.sections.push({h:(r.v==="decided"?"3":"4")+". Requirements for the developer",blocks:(r.v==="decided"?[]:[{t:"p",x:"Material is sorted into green, yellow and red light. "+LIGHTS.map(function(L){return L.name+": "+L.what+" "+L.rule;}).join(" ")}]).concat([{t:"ol",items:R}])});
+
+  // ongoing governance
+  var gv=[]; function g(k,id){ var x=one(id); if(x) gv.push([k,x]); }
+  g("Day-to-day responsibility","g_owner"); g("Approving new tools","g_newtools"); g("Personal AI apps and accounts","g_personal");
+  g("How newcomers learn the rules","g_learn"); g("Plan if something goes wrong","g_incident"); g("Rechecking terms and settings","g_recheck"); g("Reporting back and review","g_report");
+  if(gv.length) B.sections.push({h:"Governance",blocks:[{t:"kv",items:gv},{t:"p",x:"Account setting names referred to in this guide were last checked in "+CHECKED+"."}]});
+
+  // risks reviewed and options
+  var tq=allQs().filter(function(q){return q.learn&&visible(q);});
+  var ST={ok:"Understood and accepting the risk",discuss:"Needs more discussion",na:"Not relevant"};
+  if(tq.length) B.sections.push({h:"Risks and limits the community has reviewed",blocks:[{t:"kv",items:tq.map(function(q){return [q.topicTitle, ST[A[q.id]]||"Not yet discussed"];})}]});
+  var ob=[], cons=list("considered");
+  if(cons) ob.push({t:"p",x:"Approaches discussed: "+cons+"."});
+  if(val("prefer")) ob.push({t:"p",x:"Current preference: "+one("prefer")+"."});
+  if(val("compared")) ob.push({t:"p",x:"Compared with non-AI options: "+one("compared")+"."});
+  if(val("stop")) ob.push({t:"p",x:"Agreed pause or stop point: "+one("stop")+"."});
+  if(ob.length) B.sections.push({h:"Options considered",blocks:ob});
+
+  // 5 limits
+  var n=r.v==="decided"?4:5;
+  if(r.v!=="decided"){
+    B.sections.push({h:(n++)+". Known limits of AI to plan for",blocks:[{t:"ul",items:[
+      "Made-up content: AI states false information confidently. Human review is required.",
+      "Lost context: long recordings and documents are partly skipped or confused. Process in short sections.",
+      "Language gaps: accuracy is much lower for Indigenous, minority and regional languages.",
+      "Errors add up: transcribe, then translate, then summarise can badly distort meaning. Check each stage.",
+      "Model collapse: if unchecked AI text fills the archive, future tools trained on it inherit and magnify errors. Keep human-made and AI-made content clearly separate.",
+      "Change without warning: providers update or retire tools. Retest after updates."]}]});
+  }
+  // open questions
+  var open=[];
+  allQs().forEach(function(q){ if(!visible(q)||q.type==="text"||q.type==="note"||q.learn) return; var v=A[q.id];
+    if(v==null||(Array.isArray(v)&&!v.length)) open.push("Not yet answered: "+T(q.label,q.labelNoAI));
+    else if(v==="unsure"||v==="undecided"||v==="advise"||has(v,"unsure")) open.push("To confirm: "+T(q.label,q.labelNoAI)); });
+  if(open.length) B.sections.push({h:(n++)+". Open questions",blocks:[{t:"ul",items:open}]});
+  // provider questions
+  B.sections.push({h:(n++)+". Questions to answer in writing before building",blocks:[{t:"ul",items:r.v==="decided"?[
+    "Where will the material be stored, and in which country?",
+    "Who at your company, or at any partner, can see it?",
+    "Does the system, or any service it relies on, include AI features? Can they be switched off completely?",
+    "Can we delete everything, completely, whenever we choose?",
+    "What happens to our material if your company is sold or closes?",
+    "Will the system work offline or on slow connections, and in our languages?",
+    "How will our access levels and cultural protocols be enforced?",
+    "What will it cost over five years, and how do we leave if we need to?"]:[
+    "Where will the material be stored, and in which country?",
+    "Who at your company, or at any partner, can see it?",
+    "Will any of it be used to train or improve AI? Is that in the contract?",
+    "How long is it kept, and can we delete everything, completely, whenever we choose?",
+    "What happens to our material if your company is sold or closes?",
+    "Will the system work offline or on slow connections, and in our languages?",
+    "How will our access levels and cultural protocols be enforced?",
+    "What will it cost over five years, and how do we leave if we need to?"]}]});
+  B.sections.forEach(function(x,i){ x.h=(i+1)+". "+x.h.replace(/^\d+\. /,""); });
+  B.footer="Produced with the Community AI Archive Decision Guide. This brief supports, and does not replace, community decision-making.";
+  return B;
+}
+function dedupe(a){ return a.filter(function(x,i){return a.indexOf(x)===i;}); }
+
+function briefHTML(B){
+  var h='<h1>'+esc(B.title)+'</h1><p><b>'+esc(B.subtitle)+'</b></p>';
+  if(B.meta.length) h+='<dl>'+B.meta.map(function(m){return '<dt>'+esc(m[0])+'</dt><dd>'+esc(m[1])+'</dd>';}).join("")+'</dl>';
+  B.sections.forEach(function(s){
+    h+='<h2>'+esc(s.h)+'</h2>';
+    s.blocks.forEach(function(b){
+      if(b.t==="p") h+='<p>'+esc(b.x)+'</p>';
+      else if(b.t==="h4") h+='<h4>'+esc(b.x)+'</h4>';
+      else if(b.t==="ul") h+='<ul>'+b.items.map(function(i){return '<li>'+esc(i)+'</li>';}).join("")+'</ul>';
+      else if(b.t==="kv") h+= b.items.length?'<dl>'+b.items.map(function(m){return '<dt>'+esc(m[0])+'</dt><dd>'+esc(m[1])+'</dd>';}).join("")+'</dl>':'<p>No details given.</p>';
+      else if(b.t==="ol") h+='<ol>'+b.items.map(function(i){ return '<li><b>'+esc(i.b)+'.</b> '+(i.x?esc(i.x):'')+(i.list?'<ul>'+i.list.map(function(l){return '<li>'+esc(l)+'</li>';}).join("")+'</ul>':'')+'</li>'; }).join("")+'</ol>';
+    });
+  });
+  return h+'<p class="small" style="margin-top:2em;color:#666">'+esc(B.footer)+'</p>';
+}
+function briefMD(B){
+  var m="# "+B.title+"\n\n**"+B.subtitle+"**\n\n";
+  B.meta.forEach(function(x){ m+="- **"+x[0]+":** "+x[1]+"\n"; });
+  B.sections.forEach(function(s){
+    m+="\n## "+s.h+"\n\n";
+    s.blocks.forEach(function(b){
+      if(b.t==="p") m+=b.x+"\n\n";
+      else if(b.t==="h4") m+="### "+b.x+"\n\n";
+      else if(b.t==="ul") m+=b.items.map(function(i){return "- "+i;}).join("\n")+"\n\n";
+      else if(b.t==="kv") m+=b.items.map(function(i){return "- **"+i[0]+":** "+i[1];}).join("\n")+"\n\n";
+      else if(b.t==="ol") m+=b.items.map(function(i,k){ return (k+1)+". **"+i.b+".** "+(i.x||"")+(i.list?"\n"+i.list.map(function(l){return "   - "+l;}).join("\n"):""); }).join("\n")+"\n\n";
+    });
+  });
+  return m+"---\n\n"+B.footer+"\n";
+}
+
+function renderResults(){
+  var r=analyse(), V=VERDICT[r.v], B=buildBrief();
+  var issues="";
+  if(r.stops.length) issues+='<h3>Address this first</h3><ul class="issue-list">'+r.stops.map(function(f){return '<li class="flag stop">'+esc(f.text)+'</li>';}).join("")+'</ul>';
+  if(r.cautions.length) issues+='<h3>Worth attention</h3><ul class="issue-list">'+dedupe(r.cautions.map(function(f){return f.text;})).map(function(t){return '<li class="flag caution">'+esc(t)+'</li>';}).join("")+'</ul>';
+  app.innerHTML=trail()+
+   '<section><h2 tabindex="-1" id="stepHead" style="font-size:1rem;color:var(--muted);font-weight:400">Your result</h2>'+
+   '<div class="verdict">'+(V.stage>=0?'<ol class="stages" aria-label="Stage">'+["Prepare","Try small","Grow"].map(function(n,k){return '<li class="'+(k<V.stage?"done":k===V.stage?"on":"")+'"'+(k===V.stage?' aria-current="step"':'')+'>'+n+'</li>';}).join("")+'</ol>':'')+
+   '<div><h2>'+esc(V.title)+'</h2><p>'+esc(V.text)+'</p></div></div>'+
+   issues+
+   '<h3>Next steps</h3><ul>'+nextSteps(r).map(function(s){return '<li>'+esc(s)+'</li>';}).join("")+'</ul>'+
+   (r.v==="prepare"?'<h3>Your discussion pack</h3><p class="muted">An agenda, the main risks in plain language, and questions for your community conversation.</p>':'<h3>Your project brief</h3><p class="muted">Written as clear requirements for a developer. Share it with the community first.</p>')+
+   '<div class="btns"><button class="btn" data-act="pdf">'+(r.v==="prepare"?"Download discussion pack (PDF)":"Download brief (PDF)")+'</button><button class="btn ghost" data-act="md">Download editable text (.md)</button><button class="btn plain" data-act="showtext">Show as text to copy</button></div>'+
+   '<div id="textbox" hidden><label class="qlabel" for="bt">Brief as text</label><p class="qhint">Select all the text below and copy it into an email or document.</p><textarea id="bt" readonly style="width:100%;min-height:16rem;font:inherit;font-size:.9rem;padding:.75rem;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)"></textarea></div>'+
+   '<p class="status" id="status" role="status"></p>'+
+   '<div class="sheet-box"><div class="sheet" id="sheet">'+briefHTML(B)+'</div></div>'+
+   '<div class="btns"><button class="btn ghost" data-act="edit">Change answers</button><button class="btn plain" data-act="restart">Clear answers and start over</button></div></section>';
+}
+
+function render(focus){
+  if(view==="intro") renderIntro(); else if(view==="step") renderStep(); else renderResults();
+  window.scrollTo(0,0);
+  var cur=app.querySelector('.trail li.cur'), tb=app.querySelector('.trail-box'); if(cur&&tb) tb.scrollLeft=cur.offsetLeft-tb.clientWidth/2+cur.offsetWidth/2;
+  if(focus){ var h=document.getElementById("stepHead"); if(h) h.focus({preventScroll:true}); }
+}
+
+/* ---------- Downloads ---------- */
+var dlP=null;
+function getDL(){ if(!dlP&&window.claude&&typeof window.claude.use==="function"){ dlP=window.claude.use("downloads").catch(function(){return null;}); } return dlP||Promise.resolve(null); }
+function status(t){ var s=document.getElementById("status"); if(s) s.textContent=t; }
+function saveFile(name,data,mime){
+  return getDL().then(function(dl){
+    if(dl){
+      return dl.save({filename:name,data:data}).then(function(){status("Saved.");},function(e){
+        var c=e&&e.code;
+        if(c==="declined") status("Download cancelled.");
+        else if(c==="rate_limited") status("A download prompt is already open. Try again in a moment.");
+        else status("Downloads are not available in this view. You can select the brief text below and copy it instead.");
+      });
+    }
+    if(window.claude){ status("Downloads are not available in this view. You can select the brief text below and copy it instead."); return; }
+    var blob=data instanceof Blob?data:new Blob([data],{type:mime});
+    var u=URL.createObjectURL(blob), a=document.createElement("a"); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(u);},4000); status("If the download did not start, use \u2018Show as text to copy\u2019 instead.");
+  });
+}
+function loadScript(src){ return new Promise(function(res,rej){ if(document.querySelector('script[src="'+src+'"]')) return res(); var s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=function(){rej(new Error("load"));}; document.head.appendChild(s); }); }
+var JSPDF="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+var H2C="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+function fname(ext){ return ((A.project||"ai-archive").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-").toLowerCase()||"ai-archive")+(A.discussed==="not"?"-discussion-pack.":"-brief.")+ext; }
+
+function textPDF(B){
+  var jsPDF=window.jspdf.jsPDF, doc=new jsPDF({unit:"mm",format:"a4"}), M=18, W=210-2*M, y=M;
+  function ensure(h){ if(y+h>297-M-6){ doc.addPage(); y=M; } }
+  function txt(s,size,style,indent,after,color){
+    indent=indent||0; doc.setFont("helvetica",style||"normal"); doc.setFontSize(size); doc.setTextColor(color||"#17211E");
+    var lh=size*0.3528*1.4, lines=doc.splitTextToSize(String(s),W-indent);
+    lines.forEach(function(l){ ensure(lh); doc.text(l,M+indent,y+lh*0.75); y+=lh; });
+    y+=after==null?1.5:after;
+  }
+  function item(prefix,s,indent,boldLead){
+    var size=10.5, lh=size*0.3528*1.4; ensure(lh);
+    doc.setFont("helvetica","normal"); doc.setFontSize(size); doc.text(prefix,M+indent,y+lh*0.75);
+    if(boldLead){ txt(boldLead,size,"bold",indent+6,0.5); }
+    txt(s,size,"normal",indent+6,1.8);
+  }
+  txt(B.title,20,"bold",0,1); txt(B.subtitle,13,"normal",0,3,"#1D5A52");
+  B.meta.forEach(function(m){ txt(m[0]+": "+m[1],10,"normal",0,0.5,"#4E5D58"); }); y+=3;
+  B.sections.forEach(function(s){
+    ensure(16); y+=3; txt(s.h,13.5,"bold",0,1); doc.setDrawColor("#CBD5D0"); doc.line(M,y,M+W,y); y+=3;
+    s.blocks.forEach(function(b){
+      if(b.t==="p") txt(b.x,10.5,"normal",0,2.5);
+      else if(b.t==="h4") { y+=1; txt(b.x,11,"bold",0,1); }
+      else if(b.t==="ul") b.items.forEach(function(i){ item("-",i,1); });
+      else if(b.t==="kv") b.items.forEach(function(i){ txt(i[0]+": "+i[1],10.5,"normal",0,1.2); });
+      else if(b.t==="ol") b.items.forEach(function(i,k){
+        item((k+1)+".", i.x||"", 0, i.b);
+        if(i.list) i.list.forEach(function(l){ item("-",l,7); });
+      });
+    });
+  });
+  var n=doc.getNumberOfPages();
+  for(var p=1;p<=n;p++){ doc.setPage(p); doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor("#4E5D58");
+    doc.text(B.footer,M,297-10,{maxWidth:W-25}); doc.text("Page "+p+" of "+n,210-M,297-10,{align:"right"}); }
+  return doc.output("blob");
+}
+function imagePDF(){
+  return loadScript(H2C).then(function(){
+    var box=document.createElement("div");
+    box.style.cssText="position:fixed;left:-10000px;top:0;width:760px;padding:48px;background:#fff;color:#17211E;font:15px/1.55 'Atkinson Hyperlegible',Arial,sans-serif";
+    box.className="sheet"; box.innerHTML=document.getElementById("sheet").innerHTML; document.body.appendChild(box);
+    return window.html2canvas(box,{scale:2,backgroundColor:"#ffffff"}).then(function(c){
+      box.remove();
+      var jsPDF=window.jspdf.jsPDF, doc=new jsPDF({unit:"mm",format:"a4"}), pageH=Math.floor(c.width*297/210), off=0, first=true;
+      while(off<c.height){
+        var h=Math.min(pageH,c.height-off), pc=document.createElement("canvas"); pc.width=c.width; pc.height=pageH;
+        var ctx=pc.getContext("2d"); ctx.fillStyle="#fff"; ctx.fillRect(0,0,pc.width,pc.height); ctx.drawImage(c,0,off,c.width,h,0,0,c.width,h);
+        if(!first) doc.addPage(); first=false;
+        doc.addImage(pc.toDataURL("image/jpeg",0.9),"JPEG",0,0,210,297); off+=pageH;
+      }
+      return doc.output("blob");
+    });
+  });
+}
+function doPDF(btn){
+  btn.disabled=true; status("Preparing PDF\u2026");
+  var B=buildBrief(), needImg=/[^\x00-\xFF]/.test(JSON.stringify(B));
+  loadScript(JSPDF).then(function(){ return needImg?imagePDF():textPDF(B); })
+   .then(function(blob){ return saveFile(fname("pdf"),blob,"application/pdf"); })
+   .catch(function(){ status("The PDF could not be created (the PDF library may not have loaded). Try the editable text download instead."); })
+   .then(function(){ btn.disabled=false; });
+}
+
+/* ---------- Events ---------- */
+app.addEventListener("change",function(e){
+  var t=e.target; if(!t.name) return;
+  var q=DKMAP[t.name]||Q(t.name); if(!q) return;
+  var need=document.getElementById("needAns"); if(need) need.remove();
+  if(q.type==="multi"){ A[q.id]=[].slice.call(app.querySelectorAll('input[name="'+DK(q)+'"]:checked')).map(function(i){return i.value;}); }
+  else if(q.type==="single"){ A[q.id]=t.value; }
+  save(); refreshStep();
+});
+app.addEventListener("input",function(e){ var t=e.target; if(t.type==="text"&&t.name){ A[t.name]=t.value; save(); } });
+app.addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  var go=b.getAttribute("data-go"), act=b.getAttribute("data-act");
+  if(go!=null){
+    var steps=STEPS.filter(stepOn), target=go==="results"?steps.length:+go; /* not act(): shadowed by the local "act" above */
+    for(var j=0;j<target&&j<steps.length;j++){ var m=missingRisks(steps[j]); if(m.length){ view="step"; stepIdx=j; render(true); showNeed(m); return; } }
+    if(go==="results"){view="results";} else {view="step"; stepIdx=+go;} render(true); return; }
+  if(act==="start"||act==="resume"){ view="step"; stepIdx=0; render(true); }
+  else if(act==="restart"){
+    if(!hasAnswers()){ view="step"; stepIdx=0; render(true); return; }
+    var box=b.closest(".btns");
+    box.innerHTML='<p class="confirm-q" role="alert">Clear all answers saved in this browser and start over? This cannot be undone.</p>'+
+      '<button class="btn" data-act="restartYes">Clear answers</button><button class="btn ghost" data-act="restartNo">Keep my answers</button>';
+    box.querySelector('[data-act=restartNo]').focus();
+  }
+  else if(act==="restartYes"){ clearAll(); view="step"; stepIdx=0; render(true); }
+  else if(act==="restartNo"){ render(true); }
+  else if(act==="back"){ if(stepIdx===0) view="intro"; else stepIdx--; render(true); }
+  else if(act==="next"){
+    var miss=missingRisks(curStep); if(miss.length){ showNeed(miss); return; }
+    if(stepIdx<STEPS.filter(stepOn).length-1) stepIdx++; else view="results"; render(true); }
+  else if(act==="edit"){ view="step"; stepIdx=0; render(true); }
+  else if(act==="pdf") doPDF(b);
+  else if(act==="showtext"){ var tbx=document.getElementById("textbox"), ta=document.getElementById("bt"); ta.value=briefMD(buildBrief()); tbx.hidden=false; ta.focus(); ta.select(); }
+  else if(act==="md") saveFile(fname("md"),briefMD(buildBrief()),"text/markdown");
+});
+
+load(); getDL(); render(false);
+})();
+</script>
+</body>
+</html>
